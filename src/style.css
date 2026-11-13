@@ -28,8 +28,11 @@
   --fibre: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .08' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .34 0 0 0 0 .22 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
   --deboss: inset 1px 1px 2px rgba(12, 22, 6, .5), inset -1px -1px 1px rgba(239, 231, 212, .1);
   --emboss: 1px 1px 1px rgba(12, 22, 6, .45), -1px -1px 0 rgba(239, 231, 212, .06);
-  --glass-edge: 1px solid rgba(255, 255, 255, .45);
-  --glass-shine: inset 0 1px 0 rgba(255, 255, 255, .55);
+  /* cristal líquido: sin borde blanco; solo dos medialunas de luz en el canto
+     (arriba a la izquierda brillante, abajo a la derecha tenue) y la sombra que proyecta */
+  --glass-edge: 1px solid transparent;
+  --glass-shine: inset 3px 3px 2px -2.5px rgba(255, 255, 255, .5);
+  --glass-drop: 0 10px 26px -14px rgba(8, 16, 4, .6);
   color-scheme: light;
 }
 
@@ -86,15 +89,15 @@ svg { flex: none; }
   position: relative; z-index: 3; margin-top: clamp(28px, 6vh, 64px);
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 240px; padding: 19px 52px;
-  border-radius: 999px; border: 1px solid rgba(255, 255, 255, .5);
-  background: rgba(255, 255, 255, .16);
-  -webkit-backdrop-filter: blur(12px) saturate(140%); backdrop-filter: blur(12px) saturate(140%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 0 20px rgba(255, 255, 255, .08), 0 12px 30px -14px rgba(20, 35, 8, .6);
+  border-radius: 999px; border: var(--glass-edge);
+  background: rgba(255, 255, 255, .07);
+  -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: var(--glass-shine), var(--glass-drop);
   font: 700 14px/1 var(--font-ui); letter-spacing: .26em; text-transform: uppercase; text-decoration: none;
   color: #f6f2ff;
   transition: background-color .2s, transform .2s;
 }
-.start:hover { background: rgba(255, 255, 255, .26); }
+.start:hover { background: rgba(255, 255, 255, .13); }
 .start:active { transform: translateY(1px); }
 .start:focus-visible { outline: 1.5px dashed #f6f2ff; outline-offset: 4px; }
 .landing-tags {
@@ -170,7 +173,7 @@ svg { flex: none; }
   border: var(--glass-edge); border-radius: 999px;
   background: rgba(255, 255, 255, .1);
   -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%);
-  box-shadow: var(--glass-shine), 0 2px 8px rgba(60, 50, 30, .05);
+  box-shadow: var(--glass-shine), 0 6px 14px -10px rgba(8, 16, 4, .55);
   font: 600 11.5px/1 var(--font-ui); letter-spacing: .1em; text-transform: uppercase;
   color: var(--ink-2);
   transition: background-color .15s, color .15s;
@@ -209,9 +212,10 @@ svg { flex: none; }
   position: relative; z-index: 1; flex: 1; min-height: 0;
   margin: 0 24px 24px;
   border-radius: 32px; border: var(--glass-edge);
+  /* la lámina es grande: canto más ancho */
   background: rgba(255, 255, 255, .06);
   -webkit-backdrop-filter: blur(18px) saturate(130%); backdrop-filter: blur(18px) saturate(130%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 0 24px rgba(255,255,255,.1), 0 14px 40px rgba(70,55,25,.08), 0 1px 3px rgba(70,55,25,.04);
+  box-shadow: inset 4px 4px 3px -3.5px rgba(255,255,255,.4), 0 18px 44px -22px rgba(8,16,4,.55);
   overflow: hidden;
 }
 canvas#cv { position: relative; z-index: 0; display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; background: transparent; }
@@ -238,7 +242,7 @@ canvas#cv:focus-visible { outline: none; }
 .meta {
   position: absolute; right: 24px; top: 20px; z-index: 2; margin: 0;
   padding: 5px 12px;
-  border-radius: 999px; border: 1px solid rgba(255,255,255,.35);
+  border-radius: 999px; border: var(--glass-edge); box-shadow: var(--glass-shine);
   background: rgba(255,255,255,.1);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   font: 400 11px/1.4 var(--font-ui); letter-spacing: .04em; color: var(--stamp); font-variant-numeric: tabular-nums;
@@ -402,10 +406,10 @@ input[type=number] { width: 84px; font-family: var(--font-ui); font-size: 14px; 
 /* tarjetas de cristal líquido, como la lámina y las pestañas */
 .card {
   position: relative; flex: none; counter-increment: card;
-  border-radius: 18px; border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 18px; border: var(--glass-edge);
   background: rgba(var(--glass-tint), .13);
   -webkit-backdrop-filter: blur(14px) saturate(150%); backdrop-filter: blur(14px) saturate(150%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), inset 0 0 18px rgba(255, 255, 255, .04), 0 10px 26px -16px rgba(70, 55, 25, .4), 0 1px 2px rgba(70, 55, 25, .06);
+  box-shadow: var(--glass-shine), 0 10px 24px -16px rgba(8, 16, 4, .5);
   transition: background-color .2s;
 }
 .card[open] { background: rgba(var(--glass-tint), .17); }
@@ -505,4 +509,11 @@ input[type=range]:focus-visible { outline: 1.5px dashed var(--stamp); outline-of
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* Refracción en el canto (solo navegadores Chromium; el filtro lo genera src/liquidGlass.js).
+   El cristal es transparente, no esmerilado: lo de detrás se ve nítido y se curva en el borde. */
+.lg-refract :is(.start, .tabs button:not([aria-selected="true"]), .glass:not(.primary), .sheet, .meta, .card) {
+  -webkit-backdrop-filter: var(--lg-filter, blur(10px)) saturate(1.15) brightness(1.05);
+  backdrop-filter: var(--lg-filter, blur(10px)) saturate(1.15) brightness(1.05);
 }

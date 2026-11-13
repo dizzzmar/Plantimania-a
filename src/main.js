@@ -4,6 +4,7 @@ import {Motion} from "./motion.js";
 import {readColors, layoutScene, fit, pick, drawScene} from "./render.js";
 import {heroScene} from "./hero.js";
 import {createLanding} from "./landing.js";
+import {initLiquidGlass} from "./liquidGlass.js";
 import {SUGGESTIONS} from "./config.js";
 
 const $ = id => document.getElementById(id);
@@ -388,4 +389,5 @@ $("tipo").value = state.species;
 applySpecies();
 requestDraw();
 route();
+initLiquidGlass(".start, .tabs button, .glass, .sheet, .meta, .card");
 if (!reduceMotion.matches) setTimeout(() => setWind(true), 400);
