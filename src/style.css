@@ -50,6 +50,64 @@ svg { flex: none; }
   height: 100dvh; overflow: hidden;
 }
 
+/* ---------- página de inicio: papel verde afieltrado ---------- */
+.landing {
+  --green-paper: #5d7b37;
+  --dot-dark: #33491c;
+  --dot-light: #a3bd70;
+  --lilac-soft: #c9b6f4;
+  position: fixed; inset: 0; z-index: 20;
+  display: grid; place-items: center; align-content: center; gap: 0;
+  overflow: hidden;
+  background-color: var(--green-paper);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .86 0 0 0 0 .92 0 0 0 0 .74 0 0 0 1.4 -.72'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23a)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' seed='8' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .12 0 0 0 0 .17 0 0 0 0 .05 0 0 0 1.5 -.68'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.01 .06' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .2 0 0 0 0 .27 0 0 0 0 .1 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  transition: opacity .55s ease, visibility .55s;
+}
+.landing[hidden] { display: grid; opacity: 0; visibility: hidden; pointer-events: none; }
+.landing .dots { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.landing .dots-front { z-index: 2; }
+.landing-heading { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; margin-top: -4vh; }
+.landing-title {
+  margin: 0;
+  font: 500 clamp(52px, 12.5vw, 210px)/.86 var(--font-title);
+  letter-spacing: -.015em; text-transform: uppercase; white-space: nowrap;
+  color: var(--lilac-soft);
+}
+.landing-byline {
+  margin: 1.1em 0 0;
+  font: 600 clamp(10px, 1.05vw, 14px)/1.2 var(--font-ui); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--lilac-soft); white-space: nowrap;
+}
+.landing-byline i { font: italic 400 1.4em/1 var(--font-display); text-transform: none; letter-spacing: 0; margin-right: .25em; }
+/* botón de cristal líquido sobre el papel verde */
+.start {
+  position: relative; z-index: 3; margin-top: clamp(28px, 6vh, 64px);
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 240px; padding: 19px 52px;
+  border-radius: 999px; border: 1px solid rgba(255, 255, 255, .5);
+  background: rgba(255, 255, 255, .16);
+  -webkit-backdrop-filter: blur(12px) saturate(140%); backdrop-filter: blur(12px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 0 20px rgba(255, 255, 255, .08), 0 12px 30px -14px rgba(20, 35, 8, .6);
+  font: 700 14px/1 var(--font-ui); letter-spacing: .26em; text-transform: uppercase; text-decoration: none;
+  color: #f6f2ff;
+  transition: background-color .2s, transform .2s;
+}
+.start:hover { background: rgba(255, 255, 255, .26); }
+.start:active { transform: translateY(1px); }
+.start:focus-visible { outline: 1.5px dashed #f6f2ff; outline-offset: 4px; }
+.landing-tags {
+  position: absolute; left: 32px; right: 32px; bottom: 26px; z-index: 3; margin: 0;
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  font: 600 11px/1.4 var(--font-ui); letter-spacing: .14em; text-transform: uppercase;
+  color: rgba(246, 242, 255, .78);
+}
+.landing-tags span:nth-child(2) { text-align: center; }
+.landing-tags span:nth-child(3) { text-align: right; }
+.hero .title a { color: inherit; text-decoration: none; }
+
 /* ---------- cabecera lila con vegetación a puntillismo ---------- */
 .hero {
   position: relative; flex: none;
@@ -411,6 +469,11 @@ input[type=range]:focus-visible { outline: 1.5px dashed var(--stamp); outline-of
   .hero { height: 104px; }
   .hero .tags { top: 10px; left: 14px; right: 14px; font-size: 9.5px; }
   .hero .tags { display: none; }
+  .landing-tags { grid-template-columns: 1fr; gap: 4px; text-align: center; bottom: 18px; font-size: 9.5px; }
+  .landing-tags span:nth-child(n) { text-align: center; }
+  .landing-tags span:nth-child(1), .landing-tags span:nth-child(3) { display: none; }
+  .landing-byline { font-size: 8.5px; letter-spacing: .12em; }
+  .start { min-width: 0; padding: 17px 40px; }
   .hero .title { font-size: clamp(26px, 8.2vw, 56px); }
   .hero .byline { font-size: 8.5px; letter-spacing: .12em; margin-top: .45em; }
   .bar { padding: 2px 10px 10px; }

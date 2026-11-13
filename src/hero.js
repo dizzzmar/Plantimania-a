@@ -22,7 +22,7 @@ function stippleScene(cv, build, opts) {
   }
 }
 
-function leafShape(o, x, y, ang, L, w, curv) {
+export function leafShape(o, x, y, ang, L, w, curv) {
   const ca = Math.cos(ang), sa = Math.sin(ang), P = (u, v) => [x + ca * u - sa * v, y + sa * u + ca * v];
   // cuerpo con degradado (un lado en sombra)
   const a = P(0, 0), b = P(L, curv * L), gL = o.createLinearGradient(...P(L * .5, -w), ...P(L * .5, w));
@@ -41,7 +41,7 @@ function leafShape(o, x, y, ang, L, w, curv) {
   }
 }
 
-function willow(o, x0, y0, len, ang, R, filter) {
+export function willow(o, x0, y0, len, ang, R, filter) {
   const pts = [];
   for (let i = 0; i <= 40; i++) { const t = i / 40; pts.push([x0 + Math.cos(ang) * len * t + Math.sin(t * 3) * len * .06, y0 + Math.sin(ang) * len * t + t * t * len * .12]); }
   if (filter(-1)) { o.beginPath(); pts.forEach((p, i) => i ? o.lineTo(...p) : o.moveTo(...p)); o.lineWidth = 2.4; o.strokeStyle = "rgb(40,40,40)"; o.stroke(); }
@@ -53,7 +53,7 @@ function willow(o, x0, y0, len, ang, R, filter) {
   }
 }
 
-function sprig(o, x0, y0, len, ang, R, filter) {
+export function sprig(o, x0, y0, len, ang, R, filter) {
   const pts = [];
   for (let i = 0; i <= 24; i++) { const t = i / 24; pts.push([x0 + Math.cos(ang) * len * t, y0 + Math.sin(ang) * len * t + Math.sin(t * 2.4) * len * .05]); }
   if (filter(-1)) { o.beginPath(); pts.forEach((p, i) => i ? o.lineTo(...p) : o.moveTo(...p)); o.lineWidth = 1.8; o.strokeStyle = "rgb(40,40,40)"; o.stroke(); }

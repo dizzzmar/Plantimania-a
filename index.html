@@ -15,12 +15,23 @@
   <link rel="stylesheet" href="./src/style.css">
 </head>
 <body>
+<section class="landing" id="inicio" aria-labelledby="t_inicio">
+  <canvas class="dots" id="dotsBack" aria-hidden="true"></canvas>
+  <div class="landing-heading">
+    <h1 class="landing-title" id="t_inicio">Plantimanía</h1>
+    <p class="landing-byline"><i>By</i> Carlos Fernández Gámez-EFEDEGAM</p>
+  </div>
+  <canvas class="dots dots-front" id="dotsFront" aria-hidden="true"></canvas>
+  <a class="start" id="b_comenzar" href="#generador">Comenzar</a>
+  <p class="landing-tags"><span>Árboles, arbustos y trepadoras</span><span>Alzado · Planta · Isométrica</span><span>Bloques DXF y SVG</span></p>
+</section>
+
 <div class="app">
   <header class="hero">
     <canvas class="back" id="heroBack" aria-hidden="true"></canvas>
     <div class="tags"><span>Lámina<br>DXF · SVG</span><span>Alzado · Planta · Isométrica</span><span>Bloques de<br>vegetación</span></div>
     <div class="heading">
-      <h1 class="title">Plantimanía</h1>
+      <h1 class="title"><a href="#inicio" aria-label="Plantimanía, volver al inicio">Plantimanía</a></h1>
       <p class="byline"><i>By</i> Carlos Fernández Gámez-EFEDEGAM</p>
     </div>
     <canvas class="front" id="heroFront" aria-hidden="true"></canvas>

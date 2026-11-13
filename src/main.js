@@ -3,6 +3,7 @@ import {DEFAULT_SETTINGS, speciesDefaults, buildParams} from "./params.js";
 import {Motion} from "./motion.js";
 import {readColors, layoutScene, fit, pick, drawScene} from "./render.js";
 import {heroScene} from "./hero.js";
+import {createLanding} from "./landing.js";
 import {SUGGESTIONS} from "./config.js";
 
 const $ = id => document.getElementById(id);
@@ -366,6 +367,17 @@ form.addEventListener("submit", async e => {
   }
 });
 
+/* ---------- página de inicio ---------- */
+// #generador abre la herramienta; cualquier otra dirección muestra la portada.
+const landing = createLanding($("dotsBack"), $("dotsFront"));
+function route() {
+  const inApp = location.hash === "#generador";
+  $("inicio").hidden = inApp;
+  document.querySelector(".app").inert = !inApp;
+  if (inApp) { landing.stop(); setTimeout(resize, 30); } else landing.start();
+}
+addEventListener("hashchange", route);
+
 /* ---------- arranque ---------- */
 new ResizeObserver(resize).observe($("stage"));
 const paintHero = () => heroScene($("heroBack"), $("heroFront"));
@@ -375,4 +387,5 @@ document.fonts?.ready.then(() => { colors = readColors(document.documentElement)
 $("tipo").value = state.species;
 applySpecies();
 requestDraw();
+route();
 if (!reduceMotion.matches) setTimeout(() => setWind(true), 400);
