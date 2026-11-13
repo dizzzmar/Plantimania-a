@@ -25,7 +25,7 @@ export function layoutScene(views, order) {
 // Encaje en pantalla con margen para que la planta pueda moverse sin cortarse.
 export function fit(layout, W, H, inset) {
   const {bb} = layout;
-  const padX = Math.max(40, W * 0.07), padTop = Math.max(36, H * 0.08), padBottom = inset.bottom + 46;
+  const padX = Math.max(40, W * 0.07), padTop = Math.max(100, H * 0.13), padBottom = inset.bottom + 46;
   const rightRoom = 64 + (inset.right || 0);
   const aw = W - padX * 2 - rightRoom, ah = H - padTop - padBottom;
   const bw = bb[2] - bb[0], bh = bb[3] - bb[1];
@@ -119,7 +119,7 @@ export function drawScene(ctx, scene, motion, colors, opts) {
   if (layout.items.length > 1) {
     ctx.save();
     ctx.fillStyle = colors.stamp; ctx.textAlign = "center";
-    ctx.font = "600 11px 'IBM Plex Mono', ui-monospace, monospace";
+    ctx.font = "600 11px Manrope, system-ui, sans-serif";
     for (const it of layout.items) {
       const b = views[it.v].bb;
       ctx.fillText({alzado: "ALZADO", planta: "PLANTA", iso: "ISOMÉTRICA"}[it.v], ox + ((b[0] + b[2]) / 2 + it.dx) * sc, oy - (b[1] + it.dy) * sc + 24);
@@ -138,7 +138,7 @@ function drawScaleBar(ctx, sc, opts, colors) {
   ctx.fillStyle = colors.ink; ctx.strokeStyle = colors.ink; ctx.lineWidth = 1;
   for (let i = 0; i < n; i += 2) ctx.fillRect(x0 + i * step * sc, y0 - 4, step * sc, 4);
   ctx.strokeRect(x0 + 0.5, y0 - 4.5, n * step * sc, 4);
-  ctx.font = "400 11px 'IBM Plex Mono', ui-monospace, monospace";
+  ctx.font = "500 11px Manrope, system-ui, sans-serif";
   ctx.textAlign = "center"; ctx.fillStyle = colors.ink;
   for (let i = 0; i <= n; i++) {
     const v = Math.round(i * step * 100) / 100;
@@ -157,7 +157,7 @@ function drawHeight(ctx, scene, colors) {
   for (const y of [y0, y1]) { ctx.moveTo(x - 5, y + 5); ctx.lineTo(x + 5, y - 5); }
   ctx.stroke();
   ctx.translate(x + 14, (y0 + y1) / 2); ctx.rotate(-Math.PI / 2);
-  ctx.font = "400 11px 'IBM Plex Mono', ui-monospace, monospace"; ctx.textAlign = "center";
+  ctx.font = "500 11px Manrope, system-ui, sans-serif"; ctx.textAlign = "center";
   ctx.fillText(b[3].toLocaleString("es-ES", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " m", 0, 0);
   ctx.restore();
 }
