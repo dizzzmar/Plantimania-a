@@ -3,19 +3,29 @@
 import {gen} from "./engine/model.js";
 import {drawView} from "./engine/draw.js";
 import {makeDXF, makeSVG, blockName} from "./engine/export.js";
+import {simplifyView} from "./engine/simplify.js";
 
 const LAYER_CODES = ["VEG_PERIMETRO", "VEG_CONTORNO", "VEG_DETALLE", "VEG_RAICES"];
 
 // Lo que cambia el modelo 3D; los grosores y la escala no obligan a regenerarlo.
-const IGNORED = ["gp", "gc", "gd", "gr", "escala", "perim", "dxfw", "tres"];
+const IGNORED = ["gp", "gc", "gd", "gr", "escala", "perim", "dxfw", "tres", "simp"];
 const keyOf = p => JSON.stringify(Object.assign({}, p, Object.fromEntries(IGNORED.map(k => [k, 0]))));
 
-let cacheKey = null, model = null, views = {};
+let cacheKey = null, model = null, views = {}, simple = {};
 
+// Vistas completas (cacheadas) y, encima, la versión con el perímetro simplificado.
+// Mover el control de simplificación no obliga a redibujar la planta.
 function ensure(p, list) {
   const key = keyOf(p);
-  if (key !== cacheKey) { cacheKey = key; model = gen(p); views = {}; }
-  for (const v of list) if (!views[v]) views[v] = drawView(model, p, v);
+  if (key !== cacheKey) { cacheKey = key; model = gen(p); views = {}; simple = {}; }
+  const out = {}, stats = {};
+  for (const v of list) {
+    if (!views[v]) views[v] = drawView(model, p, v);
+    const k = v + ":" + (p.simp || 0);
+    if (!simple[k]) simple[k] = simplifyView(views[v], p.simp || 0);
+    out[v] = simple[k].view; stats[v] = simple[k].stats;
+  }
+  return {views: out, stats};
 }
 
 // Empaqueta polilíneas en arrays planos transferibles.
@@ -45,16 +55,17 @@ function pack(v) {
 self.onmessage = e => {
   const {type, id, params, views: list} = e.data;
   try {
-    ensure(params, list);
+    const {views: ready, stats} = ensure(params, list);
     if (type === "draw") {
       const out = {}, transfer = [];
-      for (const v of list) { const pk = pack(views[v]); transfer.push(...pk.transfer); delete pk.transfer; out[v] = pk; }
+      for (const v of list) { const pk = pack(ready[v]); transfer.push(...pk.transfer); delete pk.transfer; out[v] = pk; }
       const name = blockName(params, list.length > 1 ? "3V" : list[0]);
-      self.postMessage({type, id, views: out, name}, transfer);
+      self.postMessage({type, id, views: out, name, stats}, transfer);
     } else if (type === "export") {
       const name = blockName(params, list.length > 1 ? "3V" : list[0]);
-      const text = e.data.format === "dxf" ? makeDXF(params, list, views) : makeSVG(params, list, views);
-      const filename = e.data.format === "dxf" ? name + ".dxf" : name + "_1-" + params.escala + ".svg";
+      const text = e.data.format === "dxf" ? makeDXF(params, list, ready) : makeSVG(params, list, ready);
+      const tag = params.simp > 0 ? "_SIMPL" : "";
+      const filename = e.data.format === "dxf" ? name + tag + ".dxf" : name + tag + "_1-" + params.escala + ".svg";
       self.postMessage({type, id, text, filename});
     }
   } catch (err) {

@@ -47,6 +47,14 @@
               <option value="100" selected>1:100</option><option value="200">1:200</option>
             </select>
           </label>
+          <div class="field">Destino del archivo
+            <div class="seg dest" role="radiogroup" aria-label="Destino del archivo" id="destSeg">
+              <button role="radio" data-simp="0" aria-checked="true">CAD</button>
+              <button role="radio" data-simp="0.6" aria-checked="false">Revit</button>
+            </div>
+          </div>
+          <div class="range"><label for="simp">Simplificar perímetro exterior</label><output data-for="simp"></output><input type="range" id="simp" data-key="simp" min="0" max="1" step="0.05"></div>
+          <p class="note" id="simpInfo"></p>
           <label class="check"><input type="checkbox" data-key="tres"> Exportar las tres vistas juntas</label>
           <button class="stamp primary" id="b_dxf">Descargar DXF para AutoCAD</button>
           <button class="stamp" id="b_svg">Descargar SVG para Illustrator</button>

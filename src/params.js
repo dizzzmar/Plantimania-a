@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS = {
   suelo: true,
   perim: true, gp: 0.6, gc: 0.3, gr: 0.25, gd: 0.13,
   escala: 100, dxfw: true, tres: false,
+  simp: 0, // simplificación del perímetro exterior (0 = detalle completo para CAD)
 };
 
 // Ajustes que cambian con la especie (se reinician al elegir otra).

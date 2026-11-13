@@ -257,6 +257,8 @@ input[type=number] { width: 84px; font-family: var(--font-ui); font-size: 14px; 
   border-radius: 6px; box-shadow: var(--emboss), 0 16px 40px -14px rgba(70, 55, 25, .4);
 }
 .popover[hidden] { display: none; }
+.popover .seg { display: flex; }
+.popover .seg button { flex: 1; }
 .field { display: flex; flex-direction: column; gap: 6px; font-weight: 500; font-size: 13px; }
 .status { margin: 0; font: 500 12px/1.4 var(--font-ui); color: var(--stamp); }
 .status:empty { display: none; }

@@ -46,6 +46,7 @@ function requestDraw(delay = 0) {
       const res = await ask({type: "draw", params: p, views: list});
       if (id !== latest) return;
       setScene(p, list, res.views, res.name);
+      showSimplification(p, res.stats);
     } catch (err) {
       console.error(err);
     } finally {
@@ -160,6 +161,7 @@ const FORMAT = {
   sombra: v => fmtNum(v, 2), cs: v => "× " + fmtNum(v, 2), ramas: v => String(v), tallos: v => String(v),
   sdir: v => v + "° " + ["→", "↗", "↑", "↖", "←", "↙", "↓", "↘"][Math.round(v / 45) % 8], salt: v => v + "°", sdist: v => fmtNum(v) + " m",
   rg: v => "× " + fmtNum(v, 2), rp: v => "× " + fmtNum(v, 2),
+  simp: v => v > 0 ? Math.round(v * 100) + " %" : "Nada",
   gp: v => fmtNum(v, 2) + " mm", gc: v => fmtNum(v, 2) + " mm", gr: v => fmtNum(v, 2) + " mm", gd: v => fmtNum(v, 2) + " mm",
 };
 
@@ -171,6 +173,9 @@ function syncInputs() {
     if (el.type === "checkbox") el.checked = !!v; else el.value = v;
   }
   for (const o of document.querySelectorAll("output[data-for]")) o.textContent = FORMAT[o.dataset.for](state.values[o.dataset.for]);
+  const revit = state.values.simp > 0;
+  document.querySelectorAll("#destSeg button").forEach(b => b.setAttribute("aria-checked", String((+b.dataset.simp > 0) === revit)));
+  $("b_dxf").textContent = revit ? "Descargar DXF para Revit" : "Descargar DXF para AutoCAD";
   $("gp").disabled = !state.values.perim;
   $("gp").closest(".range").classList.toggle("off", !state.values.perim);
   updateFicha();
@@ -217,6 +222,21 @@ for (const el of inputs) {
     if (["escala", "tres", "dxfw"].includes(k)) return;
     requestDraw(el.type === "range" ? 90 : 0);
   });
+}
+
+// Destino del archivo: CAD conserva todo el perímetro; Revit lo simplifica (y se puede afinar con el deslizador).
+document.querySelectorAll("#destSeg button").forEach(b => b.addEventListener("click", () => {
+  state.values.simp = +b.dataset.simp;
+  syncInputs(); requestDraw();
+}));
+
+function showSimplification(p, stats) {
+  const all = Object.values(stats || {});
+  const before = all.reduce((s, x) => s + x.before, 0), after = all.reduce((s, x) => s + x.after, 0);
+  const n = v => v.toLocaleString("es-ES");
+  $("simpInfo").textContent = p.simp > 0
+    ? `Perímetro exterior: ${n(before)} → ${n(after)} vértices, con una tolerancia de ${fmtNum(Math.max(...all.map(x => x.tol)) * 100)} cm.`
+    : `Perímetro exterior con todo el detalle: ${n(before)} vértices. Para Revit, simplifícalo.`;
 }
 
 $("tipo").addEventListener("change", e => { state.species = e.target.value; motion.leaves = []; applySpecies(); requestDraw(); });
@@ -284,7 +304,8 @@ $("b_export").addEventListener("click", e => {
   $("exportar").hidden = !open; $("b_export").setAttribute("aria-expanded", String(open));
   if (open) $("status").textContent = "";
 });
-document.addEventListener("click", e => { if (!e.target.closest(".export-wrap")) closeExport(); });
+// Cierra el menú al hacer clic fuera (el clic simulado del enlace de descarga no cuenta).
+document.addEventListener("click", e => { if (e.isTrusted && !e.target.closest(".export-wrap")) closeExport(); });
 
 async function download(format) {
   const p = params(), list = p.tres || state.view === "tres" ? ["alzado", "planta", "iso"] : [state.view];
