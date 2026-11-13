@@ -69,6 +69,7 @@ svg { flex: none; }
 }
 .hero .back { z-index: 0; }
 .hero .front { z-index: 2; }
+.hero .heading { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
 .hero .title {
   position: relative; z-index: 1; margin: 0;
   font: 500 clamp(44px, 6.6vw, 112px)/.9 var(--font-title);
@@ -79,6 +80,16 @@ svg { flex: none; }
   font: italic 400 .55em var(--font-title);
   text-transform: none; letter-spacing: 0;
   color: var(--lilac-2); vertical-align: .55em; margin: 0 .12em;
+}
+/* firma bajo el título: palo seco en versalitas con «By» en cursiva de la serif, como en el cartel */
+.hero .byline {
+  position: relative; z-index: 3; margin: .55em 0 0;
+  font: 600 11px/1.2 var(--font-ui); letter-spacing: .16em; text-transform: uppercase;
+  color: var(--stamp); white-space: nowrap;
+}
+.hero .byline i {
+  font: italic 400 1.35em/1 var(--font-display);
+  text-transform: none; letter-spacing: 0; margin-right: .2em;
 }
 .hero .tags {
   position: absolute; top: 14px; left: 28px; right: 28px; z-index: 3;
@@ -371,6 +382,7 @@ input[type=range]:focus-visible { outline: 1.5px dashed var(--stamp); outline-of
   .hero .tags { top: 10px; left: 14px; right: 14px; font-size: 9.5px; }
   .hero .tags { display: none; }
   .hero .title { font-size: clamp(26px, 8.2vw, 56px); }
+  .hero .byline { font-size: 8.5px; letter-spacing: .12em; margin-top: .45em; }
   .bar { padding: 2px 10px 10px; }
   .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .tabs button { padding: 0 12px; flex: none; }
