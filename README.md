@@ -6,6 +6,10 @@ Además de generar, se puede jugar con la planta: un clic la sacude y le hace so
 
 ## Uso
 
+Versión publicada: https://fdegam.github.io/plantimania-a/
+
+Cada cambio en `main` se publica solo en GitHub Pages (`.github/workflows/pages.yml`).
+
 ```bash
 npm install
 npm run dev      # servidor de desarrollo
