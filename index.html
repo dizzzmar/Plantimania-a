@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plantimanía</title>
+  <meta name="description" content="Generador de vegetación para planos: dibuja árboles, arbustos, palmeras y rocas en alzado, planta e isométrica, y expórtalos a DXF y SVG.">
+  <meta name="theme-color" content="#e8dec8">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..700&family=Instrument+Sans:wght@400..600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="brand" href="./" aria-label="Plantimanía, inicio">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 29V15M16 20c-5 0-8-3-8-8 5 0 8 3 8 8Zm0-4c0-6 3-10 9-11 0 6-3 10-9 11Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Plantimanía
+    </a>
+    <div class="views seg" role="tablist" aria-label="Vista">
+      <button role="tab" data-v="alzado" aria-selected="true">Alzado</button>
+      <button role="tab" data-v="planta" aria-selected="false">Planta</button>
+      <button role="tab" data-v="iso" aria-selected="false">Isométrica</button>
+      <button role="tab" data-v="tres" aria-selected="false">Las tres</button>
+    </div>
+    <div class="actions">
+      <button class="pill" id="b_ajustes" aria-expanded="false" aria-controls="ajustes">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h9m4 0h1M3 14h3m4 0h7M14 4v4M8 12v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span>Ajustes</span>
+      </button>
+      <div class="export-wrap">
+        <button class="pill primary" id="b_export" aria-expanded="false" aria-controls="exportar">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10m0 0-4-4m4 4 4-4M4 16h12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Exportar</span>
+        </button>
+        <div class="popover" id="exportar" hidden>
+          <label class="field">Escala de salida
+            <select data-key="escala" data-num>
+              <option value="20">1:20</option><option value="50">1:50</option>
+              <option value="100" selected>1:100</option><option value="200">1:200</option>
+            </select>
+          </label>
+          <label class="check"><input type="checkbox" data-key="tres"> Las tres vistas juntas</label>
+          <button class="pill primary wide" id="b_dxf">Descargar DXF</button>
+          <button class="pill wide" id="b_svg">Descargar SVG</button>
+          <p class="note">El DXF va en metros, como bloque con capas VEG_PERIMETRO, VEG_CONTORNO, VEG_DETALLE, VEG_RAICES, VEG_RELLENO y VEG_SOMBRA. El SVG lleva las capas como grupos y los grosores en milímetros a la escala elegida.</p>
+          <p class="status" id="status" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="stage" id="stage">
+    <canvas id="cv" tabindex="0" aria-label="Dibujo de la planta. Haz clic o pulsa Intro para sacudirla; arrastra para doblar una rama."></canvas>
+    <div class="ficha" aria-live="polite">
+      <h1 id="f_nombre">Olivo</h1>
+      <p id="f_medidas"></p>
+      <p class="busy" id="busy" hidden>Dibujando…</p>
+    </div>
+    <p class="hint" id="hint">Toca la planta para sacudirla o arrástrala para doblar una rama.</p>
+  </main>
+
+  <footer class="dock" aria-label="Controles">
+    <div class="group">
+      <span class="label" id="l_especie">Especie</span>
+      <div class="select-pill">
+        <select id="tipo" aria-labelledby="l_especie">
+          <optgroup label="Árboles de copa en masas">
+            <option value="platano">Árbol de sombra</option>
+            <option value="redonda">Copa redonda</option>
+            <option value="encina">Encina</option>
+            <option value="olivo" selected>Olivo</option>
+            <option value="pino">Pino piñonero</option>
+            <option value="cipres">Ciprés</option>
+            <option value="conifera">Conífera cónica</option>
+            <option value="joven">Árbol joven de alineación</option>
+          </optgroup>
+          <optgroup label="Árboles con estructura a la vista">
+            <option value="multitallo">Multitallo</option>
+            <option value="rosetas">Frangipani</option>
+            <option value="palmera">Palmera</option>
+          </optgroup>
+          <optgroup label="Arbustos y herbáceas">
+            <option value="arbusto">Arbusto</option>
+            <option value="seto">Seto lineal</option>
+            <option value="hojagrande">Hoja grande</option>
+            <option value="graminea">Gramínea ornamental</option>
+          </optgroup>
+          <optgroup label="Trepadoras y tapizantes">
+            <option value="hiedra">Hiedra sobre muro</option>
+            <option value="hiedrasuelo">Hiedra tapizante</option>
+          </optgroup>
+          <optgroup label="Rocas">
+            <option value="roca">Roca angulosa</option>
+            <option value="canto">Canto rodado</option>
+            <option value="rocas">Grupo de rocas</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="label" id="l_estacion">Estación</span>
+      <div class="seg" role="radiogroup" aria-labelledby="l_estacion" id="estSeg">
+        <button role="radio" data-s="primavera" aria-checked="false">Primavera</button>
+        <button role="radio" data-s="verano" aria-checked="true">Verano</button>
+        <button role="radio" data-s="otono" aria-checked="false">Otoño</button>
+        <button role="radio" data-s="invierno" aria-checked="false">Invierno</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="label" id="l_viento">Viento</span>
+      <div class="row-controls">
+        <button class="switch" role="switch" aria-checked="false" id="windOn" aria-labelledby="l_viento"><span></span></button>
+        <div class="seg" role="radiogroup" aria-label="Fuerza del viento" id="windMode">
+          <button role="radio" data-m="brisa" aria-checked="true">Brisa</button>
+          <button role="radio" data-m="temporal" aria-checked="false">Temporal</button>
+        </div>
+        <div class="seg icons" role="radiogroup" aria-label="Dirección del viento" id="windDir">
+          <button role="radio" data-d="-1" aria-checked="false" aria-label="Hacia la izquierda"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10H4m0 0 5-5m-5 5 5 5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button role="radio" data-d="1" aria-checked="true" aria-label="Hacia la derecha"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m0 0-5-5m5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="label" id="l_variante">Variante</span>
+      <div class="row-controls">
+        <input type="number" id="semilla" min="1" max="99999" value="128" aria-labelledby="l_variante">
+        <button class="pill" id="variante" title="Otra variante (tecla R)">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3.5" y="3.5" width="13" height="13" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor"/><circle cx="12.5" cy="12.5" r="1.2" fill="currentColor"/><circle cx="12.5" cy="7.5" r="1.2" fill="currentColor"/><circle cx="7.5" cy="12.5" r="1.2" fill="currentColor"/></svg>
+          <span>Otra</span>
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <aside class="drawer" id="ajustes" aria-labelledby="t_ajustes" hidden>
+    <div class="drawer-head">
+      <h2 id="t_ajustes">Ajustes del dibujo</h2>
+      <button class="icon" id="b_cerrar" aria-label="Cerrar ajustes"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
+    </div>
+    <p class="species-hint" id="s_hint"></p>
+
+    <details open><summary>Dimensiones</summary><div class="body">
+      <div class="range"><label for="altura">Altura total</label><output data-for="H"></output><input type="range" id="altura" data-key="H" min="0.3" max="20" step="0.1"></div>
+      <div class="range"><label for="ancho">Ancho de copa o largo</label><output data-for="W"></output><input type="range" id="ancho" data-key="W" min="0.3" max="16" step="0.1"></div>
+      <div class="range"><label for="tronco">Altura de tronco libre</label><output data-for="tr"></output><input type="range" id="tronco" data-key="tr" min="0" max="0.6" step="0.01"></div>
+    </div></details>
+
+    <details open><summary>Grafismo</summary><div class="body">
+      <div class="range"><label for="densidad">Cantidad de follaje</label><output data-for="dens"></output><input type="range" id="densidad" data-key="dens" min="0.4" max="2" step="0.05"></div>
+      <div class="range"><label for="dentado">Dentado del borde</label><output data-for="jag"></output><input type="range" id="dentado" data-key="jag" min="0" max="2.5" step="0.05"></div>
+      <div class="range"><label for="huecos">Huecos de luz</label><output data-for="huecos"></output><input type="range" id="huecos" data-key="huecos" min="0" max="2" step="0.05"></div>
+      <div class="range"><label for="real">Realismo de las masas</label><output data-for="real"></output><input type="range" id="real" data-key="real" min="0" max="1" step="0.05"></div>
+      <div class="range"><label for="sombra">Sombreado</label><output data-for="sombra"></output><input type="range" id="sombra" data-key="sombra" min="0" max="1.5" step="0.05"></div>
+      <div class="range"><label for="cs">Tamaño de masa u hoja</label><output data-for="cs"></output><input type="range" id="cs" data-key="cs" min="0.5" max="1.8" step="0.05"></div>
+      <div class="range"><label for="ramas">Ramas principales</label><output data-for="ramas"></output><input type="range" id="ramas" data-key="ramas" min="0" max="9" step="1"></div>
+      <div class="range"><label for="tallos">Troncos o tallos</label><output data-for="tallos"></output><input type="range" id="tallos" data-key="tallos" min="1" max="7" step="1"></div>
+    </div></details>
+
+    <details><summary>Sombra y relleno</summary><div class="body">
+      <label class="check"><input type="checkbox" data-key="relleno"> Relleno dentro del perímetro</label>
+      <label class="check"><input type="checkbox" data-key="simple"> Planta simplificada: solo perímetro y cruceta</label>
+      <label class="check"><input type="checkbox" data-key="sombraP"> Sombra proyectada</label>
+      <div class="range"><label for="sdir">Dirección de la sombra en planta</label><output data-for="sdir"></output><input type="range" id="sdir" data-key="sdir" min="0" max="359" step="1"></div>
+      <div class="range"><label for="salt">Altura del sol</label><output data-for="salt"></output><input type="range" id="salt" data-key="salt" min="15" max="75" step="1"></div>
+      <div class="range"><label for="sdist">Distancia al plano de fondo</label><output data-for="sdist"></output><input type="range" id="sdist" data-key="sdist" min="0.2" max="10" step="0.1"></div>
+      <p class="note">En alzado la sombra cae sobre un plano de fondo y solo aparece si en planta va hacia arriba, lejos del observador.</p>
+    </div></details>
+
+    <details><summary>Raíces</summary><div class="body">
+      <label class="check"><input type="checkbox" data-key="raices"> Dibujar raíces en alzado</label>
+      <p class="note" id="r_hint"></p>
+      <div class="range"><label for="rg">Grosor de raíces</label><output data-for="rg"></output><input type="range" id="rg" data-key="rg" min="0.05" max="3" step="0.05"></div>
+      <div class="range"><label for="rp">Extensión de raíces</label><output data-for="rp"></output><input type="range" id="rp" data-key="rp" min="0.4" max="1.8" step="0.05"></div>
+    </div></details>
+
+    <details><summary>Líneas y exportación</summary><div class="body">
+      <label class="check"><input type="checkbox" data-key="suelo"> Línea de suelo en alzado e isométrica</label>
+      <label class="check"><input type="checkbox" data-key="perim"> Línea perimetral más gruesa</label>
+      <div class="range"><label for="gp">Grosor del perímetro</label><output data-for="gp"></output><input type="range" id="gp" data-key="gp" min="0.13" max="1.4" step="0.01"></div>
+      <div class="range"><label for="gc">Grosor interior</label><output data-for="gc"></output><input type="range" id="gc" data-key="gc" min="0.09" max="0.9" step="0.01"></div>
+      <div class="range"><label for="gr">Grosor de raíces</label><output data-for="gr"></output><input type="range" id="gr" data-key="gr" min="0.05" max="1" step="0.01"></div>
+      <div class="range"><label for="gd">Grosor del detalle</label><output data-for="gd"></output><input type="range" id="gd" data-key="gd" min="0.05" max="0.5" step="0.01"></div>
+      <label class="check"><input type="checkbox" data-key="dxfw"> Grosor real en el DXF, a la escala elegida</label>
+      <p class="note">El perímetro sale siempre como polilínea cerrada, lista para sombrear en AutoCAD o hacer una región rellena en Revit.</p>
+      <p class="note mono" id="meta"></p>
+    </div></details>
+  </aside>
+</div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
