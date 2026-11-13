@@ -72,6 +72,6 @@ export function heroScene(back, front) {
     willow(o, W * .6, -H * .1, H * 1.0, 1.55, mulberry(77), F);
     sprig(o, W * .2, H * 1.08, H * .95, -1.25, mulberry(12), F);
     sprig(o, W * .8, H * 1.12, H * .8, -1.9, mulberry(19), F);
-  }, {seed: layer === "front" ? 3 : 9, density: .26, mid: "rgba(150,154,98,.38)", dark: "rgba(112,118,64,.5)", r: 1.0});
+  }, {seed: layer === "front" ? 3 : 9, density: .26, mid: "rgba(176,198,128,.4)", dark: "rgba(36,54,20,.55)", r: 1.0});
   draw(back, "back"); draw(front, "front");
 }

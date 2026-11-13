@@ -1,18 +1,22 @@
-/* Plantimanía: imprenta sobre papel de algodón (golpe en seco y tinta de sello),
-   cabecera lila con vegetación a puntillismo y lámina de cristal líquido. */
+/* Plantimanía: papel verde afieltrado con texto beige, títulos lila,
+   cabecera con vegetación a puntillismo y lámina de cristal líquido. */
 :root {
-  --paper: #efe7d4;
-  --paper-2: #e7ddc6;
-  --paper-hi: #fbf6ea;
-  --paper-lo: #cbbd9c;
-  --ink: #24432c;
-  --ink-2: #3d5c43;
-  --stamp: #7d5cc8;
-  --lilac: #a98be3;
-  --lilac-2: #8f6fd6;
-  --muted: #6f6a57;
-  --fill: #ffffff;
-  --shadow-fill: #9f998b;
+  --paper: #47622f;        /* fondo: papel verde */
+  --paper-2: #3d5428;      /* paneles: verde algo más hondo */
+  --paper-hi: #2c3f1d;     /* verde oscuro: texto sobre botones beige y campos */
+  --paper-lo: #2a3b1b;
+  --ink: #efe7d4;          /* el texto que era verde pasa a beige */
+  --ink-2: #ddd3b8;
+  --stamp: #cdb9f6;        /* lila de sello, aclarado para leerse sobre verde */
+  --lilac: #c9b6f4;
+  --lilac-2: #b39ced;
+  --muted: #bcc3a3;
+  --beige-08: rgba(239, 231, 212, .08);
+  --beige-30: rgba(239, 231, 212, .3);
+  /* colores del dibujo en pantalla (la exportación DXF/SVG no cambia) */
+  --draw-ink: #f1e9d6;
+  --draw-fill: #567439;
+  --draw-shadow: #33481f;
 
   /* Fuentes del cartel: serif de alto contraste con cursiva y grotesca geométrica. */
   --font-title: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
@@ -22,8 +26,8 @@
 
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .3 0 0 0 0 .2 0 0 0 .14 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --fibre: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .08' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .34 0 0 0 0 .22 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
-  --deboss: inset 1px 1px 2px rgba(120, 100, 60, .38), inset -1px -1px 1px rgba(255, 252, 240, .9);
-  --emboss: 1px 1px 1px rgba(120, 100, 60, .35), -1px -1px 1px rgba(255, 252, 240, .95);
+  --deboss: inset 1px 1px 2px rgba(12, 22, 6, .5), inset -1px -1px 1px rgba(239, 231, 212, .1);
+  --emboss: 1px 1px 1px rgba(12, 22, 6, .45), -1px -1px 0 rgba(239, 231, 212, .06);
   --glass-edge: 1px solid rgba(255, 255, 255, .45);
   --glass-shine: inset 0 1px 0 rgba(255, 255, 255, .55);
   color-scheme: light;
@@ -32,8 +36,7 @@
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body {
-  background: var(--paper);
-  background-image: var(--grain), var(--fibre);
+  background: var(--paper) url("./assets/papel-verde.jpg");
   color: var(--ink);
   font: 400 14px/1.4 var(--font-ui);
   -webkit-font-smoothing: antialiased;
@@ -52,18 +55,14 @@ svg { flex: none; }
 
 /* ---------- página de inicio: papel verde afieltrado ---------- */
 .landing {
-  --green-paper: #5d7b37;
+  --green-paper: #47622f;
   --dot-dark: #33491c;
   --dot-light: #a3bd70;
   --lilac-soft: #c9b6f4;
   position: fixed; inset: 0; z-index: 20;
   display: grid; place-items: center; align-content: center; gap: 0;
   overflow: hidden;
-  background-color: var(--green-paper);
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .86 0 0 0 0 .92 0 0 0 0 .74 0 0 0 1.4 -.72'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23a)'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' seed='8' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .12 0 0 0 0 .17 0 0 0 0 .05 0 0 0 1.5 -.68'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.01 .06' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .2 0 0 0 0 .27 0 0 0 0 .1 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  background: var(--green-paper) url("./assets/papel-verde.jpg");
   transition: opacity .55s ease, visibility .55s;
 }
 .landing[hidden] { display: grid; opacity: 0; visibility: hidden; pointer-events: none; }
@@ -73,7 +72,7 @@ svg { flex: none; }
 .landing-title {
   margin: 0;
   font: 500 clamp(52px, 12.5vw, 210px)/.86 var(--font-title);
-  letter-spacing: -.015em; text-transform: uppercase; white-space: nowrap;
+  letter-spacing: -.07em; text-transform: uppercase; white-space: nowrap;
   color: var(--lilac-soft);
 }
 .landing-byline {
@@ -131,7 +130,7 @@ svg { flex: none; }
 .hero .title {
   position: relative; z-index: 1; margin: 0;
   font: 500 clamp(44px, 6.6vw, 112px)/.9 var(--font-title);
-  letter-spacing: -.01em; text-transform: uppercase; white-space: nowrap;
+  letter-spacing: -.06em; text-transform: uppercase; white-space: nowrap;
   color: var(--lilac);
 }
 .hero .title i {
@@ -169,15 +168,15 @@ svg { flex: none; }
   display: inline-flex; align-items: center; gap: 7px;
   height: 36px; padding: 0 16px;
   border: var(--glass-edge); border-radius: 999px;
-  background: rgba(255, 255, 255, .28);
+  background: rgba(255, 255, 255, .1);
   -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%);
   box-shadow: var(--glass-shine), 0 2px 8px rgba(60, 50, 30, .05);
   font: 600 11.5px/1 var(--font-ui); letter-spacing: .1em; text-transform: uppercase;
   color: var(--ink-2);
   transition: background-color .15s, color .15s;
 }
-.tabs button:hover, .glass:hover { background: rgba(255, 255, 255, .5); color: var(--ink); }
-.tabs button[aria-selected="true"] { background: rgba(255, 255, 255, .72); color: var(--ink); }
+.tabs button:hover, .glass:hover { background: rgba(255, 255, 255, .2); color: var(--ink); }
+.tabs button[aria-selected="true"] { background: rgba(239, 231, 212, .92); color: var(--paper-hi); }
 .glass svg { width: 17px; height: 17px; }
 .glass.primary { background: var(--ink); background-image: var(--grain); border-color: var(--ink); color: var(--paper-hi); }
 .glass.primary:hover { background-color: var(--ink-2); }
@@ -193,7 +192,7 @@ svg { flex: none; }
   box-shadow: var(--emboss);
   transition: transform .06s, box-shadow .06s, background-color .15s;
 }
-.stamp:hover { background: rgba(36, 67, 44, .06); }
+.stamp:hover { background: var(--beige-08); }
 .stamp:active { transform: translateY(1px); box-shadow: var(--deboss); }
 .stamp.primary { background: var(--ink); background-image: var(--grain); color: var(--paper-hi); }
 .stamp.primary:hover { background-color: var(--ink-2); }
@@ -202,7 +201,7 @@ svg { flex: none; }
   display: grid; place-items: center; width: 34px; height: 34px;
   border: 0; border-radius: 50%; background: transparent; color: var(--ink-2);
 }
-.icon:hover { background: rgba(36, 67, 44, .07); }
+.icon:hover { background: var(--beige-08); }
 .icon svg { width: 18px; height: 18px; }
 
 /* ---------- lámina de cristal ---------- */
@@ -210,12 +209,12 @@ svg { flex: none; }
   position: relative; z-index: 1; flex: 1; min-height: 0;
   margin: 0 24px 24px;
   border-radius: 32px; border: var(--glass-edge);
-  background: rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .06);
   -webkit-backdrop-filter: blur(18px) saturate(130%); backdrop-filter: blur(18px) saturate(130%);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 0 24px rgba(255,255,255,.1), 0 14px 40px rgba(70,55,25,.08), 0 1px 3px rgba(70,55,25,.04);
   overflow: hidden;
 }
-canvas#cv { position: relative; z-index: 0; display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; background: rgba(236, 227, 207, .32); }
+canvas#cv { position: relative; z-index: 0; display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; background: transparent; }
 canvas#cv:focus-visible { outline: none; }
 .sheet:has(#cv:focus-visible) { outline: 1.5px dashed var(--stamp); outline-offset: -6px; }
 
@@ -239,8 +238,8 @@ canvas#cv:focus-visible { outline: none; }
 .meta {
   position: absolute; right: 24px; top: 20px; z-index: 2; margin: 0;
   padding: 5px 12px;
-  border-radius: 999px; border: 1px solid rgba(255,255,255,.7);
-  background: rgba(255,255,255,.45);
+  border-radius: 999px; border: 1px solid rgba(255,255,255,.35);
+  background: rgba(255,255,255,.1);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   font: 400 11px/1.4 var(--font-ui); letter-spacing: .04em; color: var(--stamp); font-variant-numeric: tabular-nums;
 }
@@ -266,7 +265,7 @@ canvas#cv:focus-visible { outline: none; }
   box-shadow: var(--emboss), 0 10px 28px -12px rgba(70, 55, 25, .35);
 }
 .group { display: flex; flex-direction: column; gap: 8px; padding: 0 16px; min-width: 0; }
-.group + .group { border-left: 1px dashed rgba(36, 67, 44, .35); }
+.group + .group { border-left: 1px dashed var(--beige-30); }
 .label { font: 600 10.5px/1.4 var(--font-ui); letter-spacing: .14em; text-transform: uppercase; color: var(--stamp); }
 .row-controls { display: flex; align-items: center; gap: 10px; }
 
@@ -295,7 +294,7 @@ input[type=number] { width: 84px; font-family: var(--font-ui); font-size: 14px; 
   font: 700 10.5px/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase;
 }
 .seg button + button { border-left: 1px solid var(--ink); }
-.seg button:hover:not(:disabled):not([aria-checked="true"]) { background: rgba(36, 67, 44, .06); }
+.seg button:hover:not(:disabled):not([aria-checked="true"]) { background: var(--beige-08); }
 .seg button[aria-checked="true"] { background: var(--ink); background-image: var(--grain); color: var(--paper-hi); }
 .seg.icons button { display: grid; place-items: center; width: 36px; padding: 0; }
 .seg.icons svg { width: 17px; height: 17px; }
@@ -359,15 +358,15 @@ input[type=number] { width: 84px; font-family: var(--font-ui); font-size: 14px; 
 .suggest input:not([type=checkbox]) { height: 40px; }
 .suggest textarea { resize: vertical; min-height: 110px; }
 .suggest .stamp { align-self: flex-start; }
-.suggest .status.error { color: #a1452b; }
+.suggest .status.error { color: #f3b59b; }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 
 /* ---------- panel de ajustes: tarjetas hundidas ---------- */
 /* La zona de ajustes usa siempre el verde: el acento de sello pasa a verde dentro del panel. */
 .drawer {
-  --stamp: #3f6b45;
-  --glass-tint: 78, 122, 82;
-  --panel-green: #e4dfcb;
+  --stamp: #bcd68f;
+  --glass-tint: 150, 190, 105;
+  --panel-green: #3a5126;
   position: absolute; top: 12px; right: 12px; bottom: 12px; z-index: 5;
   width: 372px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable;
   display: flex; flex-direction: column; gap: 14px;
@@ -403,10 +402,10 @@ input[type=number] { width: 84px; font-family: var(--font-ui); font-size: 14px; 
 /* tarjetas de cristal líquido, como la lámina y las pestañas */
 .card {
   position: relative; flex: none; counter-increment: card;
-  border-radius: 18px; border: 1px solid rgba(255, 255, 255, .6);
+  border-radius: 18px; border: 1px solid rgba(255, 255, 255, .22);
   background: rgba(var(--glass-tint), .13);
   -webkit-backdrop-filter: blur(14px) saturate(150%); backdrop-filter: blur(14px) saturate(150%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 0 18px rgba(255, 255, 255, .14), 0 10px 26px -16px rgba(70, 55, 25, .4), 0 1px 2px rgba(70, 55, 25, .06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), inset 0 0 18px rgba(255, 255, 255, .04), 0 10px 26px -16px rgba(70, 55, 25, .4), 0 1px 2px rgba(70, 55, 25, .06);
   transition: background-color .2s;
 }
 .card[open] { background: rgba(var(--glass-tint), .17); }
@@ -429,7 +428,7 @@ input[type=number] { width: 84px; font-family: var(--font-ui); font-size: 14px; 
 .card > summary:hover .t { color: var(--ink-2); }
 .card > summary:focus-visible { outline: 1.5px dashed var(--stamp); outline-offset: -4px; border-radius: 18px; }
 .cbody { display: flex; flex-direction: column; gap: 13px; padding: 4px 16px 18px; }
-.cbody::before { content: ""; display: block; border-top: 1px solid rgba(255, 255, 255, .7); box-shadow: 0 -1px 0 rgba(36, 67, 44, .12); margin: 0 0 4px; }
+.cbody::before { content: ""; display: block; border-top: 1px solid rgba(255, 255, 255, .18); box-shadow: 0 -1px 0 rgba(12, 22, 6, .25); margin: 0 0 4px; }
 
 .range { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 10px; }
 .range label { font-weight: 500; font-size: 13px; }
@@ -456,8 +455,8 @@ input[type=range]:focus-visible { outline: 1.5px dashed var(--stamp); outline-of
 /* barra de desplazamiento lila */
 .drawer::-webkit-scrollbar { width: 10px; }
 .drawer::-webkit-scrollbar-track { background: transparent; margin: 10px 0; }
-.drawer::-webkit-scrollbar-thumb { background: rgba(78,122,82,.85); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
-@supports not selector(::-webkit-scrollbar) { .drawer { scrollbar-width: thin; scrollbar-color: rgba(78,122,82,.75) transparent; } }
+.drawer::-webkit-scrollbar-thumb { background: rgba(188,214,143,.7); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+@supports not selector(::-webkit-scrollbar) { .drawer { scrollbar-width: thin; scrollbar-color: rgba(188,214,143,.6) transparent; } }
 
 /* ---------- pantallas medianas y móvil ---------- */
 @media (max-width: 1180px) {
@@ -491,7 +490,7 @@ input[type=range]:focus-visible { outline: 1.5px dashed var(--stamp); outline-of
   .group { padding: 0 10px; }
   .group + .group { border-left: 0; }
   .group:nth-child(1) { order: 1; }
-  .group:nth-child(3) { order: 2; border-left: 1px dashed rgba(36, 67, 44, .35); }
+  .group:nth-child(3) { order: 2; border-left: 1px dashed var(--beige-30); }
   .group:nth-child(3) #windMode { display: none; }
   .group:nth-child(2) { order: 3; grid-column: 1 / -1; }
   .group:nth-child(2) .seg { display: flex; }

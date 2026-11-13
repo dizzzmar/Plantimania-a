@@ -6,7 +6,7 @@ const PERIMETRO = 0, CONTORNO = 1, DETALLE = 2, RAICES = 3;
 export function readColors(el) {
   const cs = getComputedStyle(el);
   const v = n => cs.getPropertyValue(n).trim();
-  return {ink: v("--ink"), fill: v("--fill"), shadow: v("--shadow-fill"), muted: v("--muted"), stamp: v("--stamp"), paper: v("--paper-hi")};
+  return {ink: v("--draw-ink"), fill: v("--draw-fill"), shadow: v("--draw-shadow"), muted: v("--muted"), stamp: v("--stamp"), paper: v("--draw-fill")};
 }
 
 // Coloca las vistas en fila, alineadas por abajo (unidades del mundo).
