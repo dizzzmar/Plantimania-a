@@ -64,6 +64,8 @@ export function sprig(o, x0, y0, len, ang, R, filter) {
   }
 }
 
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
 export function heroScene(back, front) {
   const draw = (cv, layer) => stippleScene(cv, (o, W, H) => {
     const R = mulberry(41);
@@ -72,6 +74,6 @@ export function heroScene(back, front) {
     willow(o, W * .6, -H * .1, H * 1.0, 1.55, mulberry(77), F);
     sprig(o, W * .2, H * 1.08, H * .95, -1.25, mulberry(12), F);
     sprig(o, W * .8, H * 1.12, H * .8, -1.9, mulberry(19), F);
-  }, {seed: layer === "front" ? 3 : 9, density: .26, mid: "rgba(176,198,128,.4)", dark: "rgba(36,54,20,.55)", r: 1.0});
+  }, {seed: layer === "front" ? 3 : 9, density: .26, mid: css("--hero-mid"), dark: css("--hero-dark"), r: 1.0});
   draw(back, "back"); draw(front, "front");
 }

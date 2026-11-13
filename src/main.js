@@ -368,6 +368,19 @@ form.addEventListener("submit", async e => {
   }
 });
 
+/* ---------- color de la página: verde, lila o beige ---------- */
+const THEMES = ["verde", "lila", "beige"];
+function setTheme(t, save = true) {
+  if (!THEMES.includes(t)) t = "verde";
+  if (t === "verde") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+  document.querySelectorAll(".themes button").forEach(b => b.setAttribute("aria-checked", String(b.dataset.theme === t)));
+  if (save) try { localStorage.setItem("plantimania-tema", t); } catch {}
+  colors = readColors(document.documentElement); paint();
+  heroScene($("heroBack"), $("heroFront"));
+  landing?.refresh();
+}
+document.querySelectorAll(".themes button").forEach(b => b.addEventListener("click", () => setTheme(b.dataset.theme)));
+
 /* ---------- página de inicio ---------- */
 // #generador abre la herramienta; cualquier otra dirección muestra la portada.
 const landing = createLanding($("dotsBack"), $("dotsFront"));
@@ -388,6 +401,7 @@ document.fonts?.ready.then(() => { colors = readColors(document.documentElement)
 $("tipo").value = state.species;
 applySpecies();
 requestDraw();
+{ let t = "verde"; try { t = localStorage.getItem("plantimania-tema") || t; } catch {} setTheme(t, false); }
 route();
 initLiquidGlass(".start, .tabs button, .glass, .sheet, .meta, .card");
 if (!reduceMotion.matches) setTimeout(() => setWind(true), 400);

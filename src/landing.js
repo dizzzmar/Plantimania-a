@@ -63,8 +63,9 @@ export function createLanding(back, front) {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   // ?t=segundos congela la animación en ese instante (para capturas de revisión)
   const frozen = new URLSearchParams(location.search).get("t");
-  const css = getComputedStyle(back.closest(".landing"));
-  const colors = {dark: css.getPropertyValue("--dot-dark").trim(), light: css.getPropertyValue("--dot-light").trim()};
+  const colors = {};
+  const readColors = () => { const css = getComputedStyle(back.closest(".landing")); colors.dark = css.getPropertyValue("--dot-dark").trim(); colors.light = css.getPropertyValue("--dot-light").trim(); };
+  readColors();
 
   function resize() {
     dpr = Math.min(2, devicePixelRatio || 1);
@@ -168,5 +169,6 @@ export function createLanding(back, front) {
       running = true; t0 = performance.now(); last = 0; raf = requestAnimationFrame(loop);
     },
     stop() { running = false; cancelAnimationFrame(raf); },
+    refresh() { readColors(); if (!running) draw(frozen ? +frozen : FORM + 1); },
   };
 }
