@@ -48,3 +48,38 @@ describe("motor de vegetación", () => {
     expect(drawView(gen(p), p, "alzado").lines.length).toBeGreaterThan(0);
   });
 });
+
+describe("otoño en planta e isométrica e hiedra", () => {
+  it("las caducas dejan hojarasca con perímetro cerrado, relleno y sombra", () => {
+    for (const v of ["planta", "iso"]) {
+      const p = buildParams("platano", {estacion: "otono", sombraP: true, relleno: true}, 7);
+      const V = drawView(gen(p), p, v);
+      const leaves = V.lines.filter(l => l.litter && l.closed);
+      expect(leaves.length).toBeGreaterThan(10);
+      for (const l of leaves) expect(l.pts[0]).toEqual(l.pts[l.pts.length - 1]);
+      expect(V.white.filter(w => w.litter).length).toBe(leaves.length);
+      expect(V.shadow.filter(s => s.litter).length).toBe(leaves.length);
+    }
+  });
+
+  it("sin relleno ni sombra, las hojas solo llevan su contorno", () => {
+    const p = buildParams("redonda", {estacion: "otono", sombraP: false, relleno: false}, 7);
+    const V = drawView(gen(p), p, "planta");
+    expect(V.lines.some(l => l.litter)).toBe(true);
+    expect(V.white.length + V.shadow.length).toBe(0);
+  });
+
+  it("en verano y en alzado no hay hojarasca nueva", () => {
+    const verano = buildParams("platano", {estacion: "verano"}, 7);
+    expect(drawView(gen(verano), verano, "planta").lines.some(l => l.litter)).toBe(false);
+    const otono = buildParams("platano", {estacion: "otono"}, 7);
+    expect(drawView(gen(otono), otono, "alzado").lines.some(l => l.litter)).toBe(false);
+  });
+
+  it("la hiedra no se envuelve en un perímetro inventado", () => {
+    const p = buildParams("hiedra", {}, 128);
+    const V = drawView(gen(p), p, "alzado");
+    // muchas siluetas reales de hojas y tallos, no una única envolvente
+    expect(V.lines.filter(l => l.layer === "VEG_PERIMETRO").length).toBeGreaterThan(20);
+  });
+});

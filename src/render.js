@@ -63,12 +63,13 @@ export function drawScene(ctx, scene, motion, colors, opts) {
 
   for (const it of layout.items) {
     const V = views[it.v], f = motion.frames[it.v];
-    const X = (x, y) => {
-      if (moving && f) { motion.displace(f, x, y, tmp); x += tmp[0]; y += tmp[1]; }
+    // La planta se deforma con el movimiento; la hojarasca del suelo se queda quieta.
+    const toScreen = live => (x, y) => {
+      if (live && moving && f) { motion.displace(f, x, y, tmp); x += tmp[0]; y += tmp[1]; }
       return [ox + (x + it.dx) * sc, oy - (y + it.dy) * sc];
     };
-    const ringsPath = (rings, closed) => {
-      const path = new Path2D(), {xy, start} = rings;
+    const ringsPath = (rings, closed, X, path = new Path2D()) => {
+      const {xy, start} = rings;
       for (let r = 0; r < start.length - 1; r++) {
         for (let i = start[r]; i < start[r + 1]; i++) {
           const q = X(xy[2 * i], xy[2 * i + 1]);
@@ -78,17 +79,22 @@ export function drawScene(ctx, scene, motion, colors, opts) {
       }
       return path;
     };
+    const groups = [[V.still, toScreen(false)], [V, toScreen(true)]].filter(([g]) => g);
 
-    if (V.shadow.start.length > 1) { ctx.fillStyle = colors.shadow; ctx.fill(ringsPath(V.shadow, true), "nonzero"); }
-    if (V.white.start.length > 1) { ctx.fillStyle = colors.fill; ctx.fill(ringsPath(V.white, true), "evenodd"); }
+    const shade = new Path2D(), white = new Path2D();
+    for (const [g, X] of groups) { ringsPath(g.shadow, true, X, shade); ringsPath(g.white, true, X, white); }
+    ctx.fillStyle = colors.shadow; ctx.fill(shade, "nonzero");
+    ctx.fillStyle = colors.fill; ctx.fill(white, "evenodd");
 
     const paths = [new Path2D(), new Path2D(), new Path2D(), new Path2D()];
-    const {xy, start, layer} = V.lines;
-    for (let r = 0; r < start.length - 1; r++) {
-      const path = paths[layer[r]];
-      for (let i = start[r]; i < start[r + 1]; i++) {
-        const q = X(xy[2 * i], xy[2 * i + 1]);
-        i === start[r] ? path.moveTo(q[0], q[1]) : path.lineTo(q[0], q[1]);
+    for (const [g, X] of groups) {
+      const {xy, start, layer} = g.lines;
+      for (let r = 0; r < start.length - 1; r++) {
+        const path = paths[layer[r]];
+        for (let i = start[r]; i < start[r + 1]; i++) {
+          const q = X(xy[2 * i], xy[2 * i + 1]);
+          i === start[r] ? path.moveTo(q[0], q[1]) : path.lineTo(q[0], q[1]);
+        }
       }
     }
     ctx.strokeStyle = colors.ink;

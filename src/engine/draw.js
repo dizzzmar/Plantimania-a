@@ -1,6 +1,7 @@
 // Dibujo de una vista: proyección, ocultación de líneas, perímetro, relleno y sombra.
 import {mulberry,U,N} from "./random.js";
 import {v3,seasonModel} from "./model.js";
+import {genLitter} from "./litter.js";
 /* ---------- proyecciones ---------- */
 const ALPHA=Math.asin(Math.tan(Math.PI/6)); // 35.264°
 const CA=Math.cos(ALPHA), SA=Math.sin(ALPHA), R2=Math.SQRT1_2;
@@ -167,11 +168,13 @@ function castShadow(model,p,v,per){
   if(!polys.length)return [];
   let bb=[Infinity,Infinity,-Infinity,-Infinity];for(const P of polys)for(const q of P){bb[0]=Math.min(bb[0],q[0]);bb[1]=Math.min(bb[1],q[1]);bb[2]=Math.max(bb[2],q[0]);bb[3]=Math.max(bb[3],q[1]);}
   const maxd=Math.max(bb[2]-bb[0],bb[3]-bb[1]),res=maxd/900,thin=p.mode==="graminea"||p.mode==="palmera"||p.mode==="hiedra";
-  const cr=thin?Math.round(0.03*maxd/res):Math.max(2,Math.round(0.006*maxd/res)),pad=res*(6+cr);
-  const M=new Mask([bb[0]-pad,bb[1]-pad,bb[2]+pad,bb[3]+pad],res);M.minHole=Math.pow(maxd*0.04,2);
+  // La hiedra proyecta la sombra de sus hojas y tallos, no la de una envolvente.
+  const ivy=p.mode==="hiedra";
+  const cr=ivy?Math.max(2,Math.round(0.006/res)):thin?Math.round(0.03*maxd/res):Math.max(2,Math.round(0.006*maxd/res)),pad=res*(6+cr);
+  const M=new Mask([bb[0]-pad,bb[1]-pad,bb[2]+pad,bb[3]+pad],res);M.minHole=ivy?Math.pow(0.02,2):Math.pow(maxd*0.04,2);
   for(const P of polys)if(P.length>2)M.fill(P);
   const clr=()=>{if(!alz)return;for(let j=0;j<M.h;j++){if(M.y0+(j+0.5)*res<0)for(let i=0;i<M.w;i++)M.m2[j*M.w+i]=0;}};
-  clr();M.close2(cr,true);clr();
+  clr();M.close2(cr,!ivy);clr();
   return traceMask(M).filter(l=>l.outer);
 }
 function dpLoop(P,tol){
@@ -228,7 +231,8 @@ function drawView(model,p,v){
   const limbTier=(v==="planta"||shrubV||!(p.mode==="masas"||multi))?0:1e6;
   const LX=-0.62,LY=0.78;
   const tier=(c)=>{if(v==="planta"||shrubV||p.mode==="olivo"||p.mode==="cipres"||p.mode==="conifera")return 0;if(multi)return (mulberry(c.seed+3)()<0.35)?2e6:0;if(c.y>=yTop)return 2e6;return (mulberry(c.seed+3)()<0.3)?2e6:0;};
-  for(const lf of (model.fallen||[])){const P=lf.outline.map(q=>proj(v,q)),poly=P.map(o=>o.s);items.push({d:P[0].d,lines:[{pts:poly.concat([poly[0]]),layer:C}],poly,ground:true});}
+  const litter=(v!=="alzado"&&model.fallen&&model.fallen.length)?genLitter(model,p).map(lf=>({lf,poly:lf.outline.map(q=>proj(v,q).s)})):[];
+  for(const lf of (litter.length?[]:(model.fallen||[]))){const P=lf.outline.map(q=>proj(v,q)),poly=P.map(o=>o.s);items.push({d:P[0].d,lines:[{pts:poly.concat([poly[0]]),layer:C}],poly,ground:true});}
   for(const lf of model.leaves){
     const P=lf.outline.map(q=>proj(v,q)),poly=P.map(o=>o.s),d=P.reduce((a,o)=>a+o.d,0)/P.length;
     const lines=lf.center?[{pts:lf.center.map(q=>proj(v,q).s),layer:"VEG_CONTORNO*"}]:[{pts:poly.concat([poly[0]]),layer:C}];
@@ -394,11 +398,15 @@ function drawView(model,p,v){
     if(it.poly)for(const q of it.poly){bb[0]=Math.min(bb[0],q[0]);bb[1]=Math.min(bb[1],q[1]);bb[2]=Math.max(bb[2],q[0]);bb[3]=Math.max(bb[3],q[1]);}}
   const crownP=model.crown?model.crown.map(c=>{const pr=proj(v,[c.x,c.y,c.z]),[rx,ry]=clumpRadii(v,c);return fringe(pr.s[0],pr.s[1],rx*1.18,ry*1.18,c.seed+5,0.6);}):[];
   for(const cp of crownP)for(const q of cp){bb[0]=Math.min(bb[0],q[0]);bb[1]=Math.min(bb[1],q[1]);bb[2]=Math.max(bb[2],q[0]);bb[3]=Math.max(bb[3],q[1]);}
+  for(const {poly} of litter)for(const q of poly){bb[0]=Math.min(bb[0],q[0]);bb[1]=Math.min(bb[1],q[1]);bb[2]=Math.max(bb[2],q[0]);bb[3]=Math.max(bb[3],q[1]);}
   const maxd=Math.max(bb[2]-bb[0],bb[3]-bb[1]),res=maxd/1500;
-  const thinM=p.mode==="hiedra"||p.mode==="graminea"||p.mode==="palmera",fillH=thinM;
-  const closeR=model.leafless?2:p.mode==="hiedra"?Math.round(0.055*p.cs*1.6/res):(p.mode==="graminea"||p.mode==="palmera")?Math.round(0.035*maxd/res):Math.max(3,Math.round(0.004*maxd/res));
+  // Hiedra: el perímetro sigue sus grupos reales de hojas y tallos. Solo se unen hojas a menos
+  // de ~4 cm entre sí, sin rellenar los huecos ni inventar una envolvente.
+  const ivy=p.mode==="hiedra";
+  const thinM=ivy||p.mode==="graminea"||p.mode==="palmera",fillH=thinM&&!ivy;
+  const closeR=model.leafless?2:ivy?Math.max(2,Math.round(0.02/res)):(p.mode==="graminea"||p.mode==="palmera")?Math.round(0.035*maxd/res):Math.max(3,Math.round(0.004*maxd/res));
   const pad=res*(6+closeR);
-  const M=new Mask([bb[0]-pad,bb[1]-pad,bb[2]+pad,bb[3]+pad],res);M.minHole=Math.pow(maxd*(model.leafless?0.012:0.03),2);
+  const M=new Mask([bb[0]-pad,bb[1]-pad,bb[2]+pad,bb[3]+pad],res);M.minHole=ivy?Math.pow(0.05,2):Math.pow(maxd*(model.leafless?0.012:0.03),2);
   for(const it of items){for(const L of it.lines){M.clip(L.pts,L.layer,it.ground);if(thinM&&L.layer==="VEG_CONTORNO*"&&!it.ground&&!it.root)M.stroke2(L.pts,1);}if(it.poly)M.fill(it.poly,it.root?'r':it.ground);}
   for(const cp of crownP)M.fill(cp,'p');
   M.close2(closeR,fillH);
@@ -407,8 +415,40 @@ function drawView(model,p,v){
   if(v==="planta"&&p.simple){const r=Math.max(0.1,model.W*0.07);lines=lines.filter(l=>l.layer==="VEG_PERIMETRO").concat([{pts:[[-r,0],[r,0]],layer:"VEG_CONTORNO"},{pts:[[0,-r],[0,r]],layer:"VEG_CONTORNO"}]);}
   const white=p.relleno?per.map(l=>({outer:l.pts,holes:holesL.filter(h=>pip(h.pts[0],l.pts)).map(h=>h.pts)})):[];
   const shadow=p.sombraP?castShadow(model,p,v,per):[];
+  if(litter.length)lines=addLitter(litter,M,lines,white,shadow,p,v,res);
   for(const L of shadow)for(const q of L){bb[0]=Math.min(bb[0],q[0]);bb[1]=Math.min(bb[1],q[1]);bb[2]=Math.max(bb[2],q[0]);bb[3]=Math.max(bb[3],q[1]);}
   return {lines,bb,white,shadow};
+}
+
+/* ---------- hojarasca de otoño (planta e isométrica) ---------- */
+// Cada hoja visible entra completa: perímetro cerrado, nervios, relleno y sombra.
+// Las que caen bajo la copa (o detrás, en isométrica) no se ven y se descartan.
+function addLitter(litter,M,lines,white,shadow,p,v,res){
+  const hidden=(x,y)=>M.covered(x,y)||M.at(M.m2,x,y);
+  const vis=litter.filter(({poly})=>{
+    let cx=0,cy=0;for(const q of poly){if(hidden(q[0],q[1]))return false;cx+=q[0];cy+=q[1];}
+    return !hidden(cx/poly.length,cy/poly.length);
+  });
+  if(!vis.length)return lines;
+  // las líneas de suelo que pasan por debajo de una hoja se cortan
+  let lb=[Infinity,Infinity,-Infinity,-Infinity];
+  for(const {poly} of vis)for(const q of poly){lb[0]=Math.min(lb[0],q[0]);lb[1]=Math.min(lb[1],q[1]);lb[2]=Math.max(lb[2],q[0]);lb[3]=Math.max(lb[3],q[1]);}
+  const LM=new Mask([lb[0]-res*4,lb[1]-res*4,lb[2]+res*4,lb[3]+res*4],res);
+  for(const {poly} of vis)LM.fill(poly);
+  const out=[];
+  for(const l of lines){
+    if(l.layer==="VEG_PERIMETRO"||l.pts.every(q=>q[0]<lb[0]||q[0]>lb[2]||q[1]<lb[1]||q[1]>lb[3])){out.push(l);continue;}
+    LM.out=[];LM.clip(l.pts,l.layer);for(const r of LM.out)out.push({pts:r.pts,layer:l.layer});
+  }
+  const th=p.sdir*Math.PI/180,el=p.salt*Math.PI/180,dx=Math.cos(th),dz=-Math.sin(th),ct=1/Math.tan(el);
+  for(const {lf,poly} of vis){
+    const ring=poly.concat([poly[0].slice()]);
+    out.push({pts:ring,layer:"VEG_CONTORNO",closed:true,litter:true});
+    for(const vn of lf.veins)out.push({pts:vn.map(q=>proj(v,q).s),layer:"VEG_DETALLE",litter:true});
+    if(p.relleno)white.push({outer:ring,holes:[],litter:true});
+    if(p.sombraP){const sh=lf.outline.map(q=>proj(v,[q[0]+lf.h*ct*dx,0,q[2]+lf.h*ct*dz]).s);sh.push(sh[0].slice());sh.litter=true;shadow.push(sh);}
+  }
+  return out;
 }
 
 export {proj,drawView,layerOf,weightOf,dpLoop,bridge,earclip,pip};

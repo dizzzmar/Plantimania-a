@@ -38,17 +38,28 @@ function packRings(rings) {
   return {xy, start};
 }
 
+// Un grupo de líneas, rellenos y sombras ya empaquetado.
+function packGroup(lines, white, shadow) {
+  const L = packRings(lines.map(l => l.pts));
+  const layer = Uint8Array.from(lines.map(l => Math.max(0, LAYER_CODES.indexOf(l.layer))));
+  const W = packRings(white.flatMap(w => [w.outer, ...w.holes]));
+  const S = packRings(shadow);
+  return {
+    group: {lines: {...L, layer}, white: W, shadow: S},
+    transfer: [L.xy.buffer, L.start.buffer, layer.buffer, W.xy.buffer, W.start.buffer, S.xy.buffer, S.start.buffer],
+  };
+}
+
+// La planta (que se mueve con el viento) y la hojarasca del suelo (quieta) van por separado.
 function pack(v) {
-  const lines = packRings(v.lines.map(l => l.pts));
-  const layer = Uint8Array.from(v.lines.map(l => Math.max(0, LAYER_CODES.indexOf(l.layer))));
-  const white = packRings(v.white.flatMap(w => [w.outer, ...w.holes]));
-  const shadow = packRings(v.shadow);
+  const isLitter = x => !!x.litter;
+  const live = packGroup(v.lines.filter(l => !isLitter(l)), v.white.filter(w => !isLitter(w)), v.shadow.filter(s => !isLitter(s)));
+  const still = packGroup(v.lines.filter(isLitter), v.white.filter(isLitter), v.shadow.filter(isLitter));
   const crown = packRings(v.lines.filter(l => l.layer === "VEG_PERIMETRO" && l.outer).map(l => l.pts));
   return {
-    bb: v.bb, lines: {...lines, layer}, white, shadow, crown,
+    bb: v.bb, ...live.group, still: still.group, crown,
     count: v.lines.length,
-    transfer: [lines.xy.buffer, lines.start.buffer, layer.buffer, white.xy.buffer, white.start.buffer,
-      shadow.xy.buffer, shadow.start.buffer, crown.xy.buffer, crown.start.buffer],
+    transfer: [...live.transfer, ...still.transfer, crown.xy.buffer, crown.start.buffer],
   };
 }
 
