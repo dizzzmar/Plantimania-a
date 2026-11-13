@@ -1,10 +1,6 @@
 import {SPECIES, GROVE} from "./engine/species.js";
 import {DEFAULT_SETTINGS, speciesDefaults, buildParams} from "./params.js";
-import {Motion} from "./motion.js";
-import {readColors, layoutScene, fit, pick, drawScene} from "./render.js";
-import {heroScene} from "./hero.js";
-import {createLanding} from "./landing.js";
-import {initLiquidGlass} from "./liquidGlass.js";
+import {createStage} from "./stage.js";
 import {SUGGESTIONS} from "./config.js";
 
 const $ = id => document.getElementById(id);
@@ -17,7 +13,6 @@ const state = {
   view: "alzado",
   values: {...DEFAULT_SETTINGS, ...speciesDefaults("olivo")},
 };
-const motion = new Motion();
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
 /* ---------- worker ---------- */
@@ -39,8 +34,32 @@ const params = () => buildParams(state.species, state.values, state.seed);
 const viewList = () => state.view === "tres" ? ["alzado", "planta", "iso"] : [state.view];
 
 /* ---------- dibujo ---------- */
+// La hoja del tablero: el cajetín ocupa el pie, así que el dibujo se encaja por encima.
+function inset() {
+  const stage = $("stage"), s = stage.getBoundingClientRect();
+  const c = stage.querySelector(".cajetin").getBoundingClientRect();
+  const drawer = $("ajustes"), wr = $("workspace").getBoundingClientRect();
+  const open = innerWidth > 860 && drawer.classList.contains("open");
+  const right = open ? Math.max(0, s.right - (wr.right - 12 - drawer.offsetWidth) + 16) : 0;
+  return {bottom: Math.max(0, s.bottom - c.top), right, left: c.left - s.left};
+}
+const stage = createStage($("cv"), {inset, onTouch: () => $("hint").classList.add("gone")});
+const motion = stage.motion;
+const resize = () => stage.resize();
+
+// Al cambiar de vista, especie o variante, la hoja anterior se queda un momento
+// translúcida encima, como un papel vegetal que se retira.
+let wantGhost = false;
+function ghostOut() {
+  if (reduceMotion.matches || !stage.scene) return;
+  const g = $("ghost");
+  g.style.backgroundImage = `url(${$("cv").toDataURL("image/png")})`;
+  g.classList.remove("go"); void g.offsetWidth; g.classList.add("go");
+}
+
 let drawTimer = 0, latest = 0;
-function requestDraw(delay = 0) {
+function requestDraw(delay = 0, ghost = false) {
+  wantGhost = wantGhost || ghost;
   clearTimeout(drawTimer);
   drawTimer = setTimeout(async () => {
     const id = ++latest, p = params(), list = viewList();
@@ -48,7 +67,12 @@ function requestDraw(delay = 0) {
     try {
       const res = await ask({type: "draw", params: p, views: list});
       if (id !== latest) return;
-      setScene(p, list, res.views, res.name);
+      if (wantGhost) ghostOut();
+      wantGhost = false;
+      stage.setScene(p, list, res.views);
+      drawnBox = res.views[list[0]].bb; showMedidas();
+      const total = list.reduce((s, v) => s + res.views[v].count, 0);
+      $("meta").textContent = res.name + " · " + total.toLocaleString("es-ES") + " polilíneas";
       showSimplification(p, res.stats);
     } catch (err) {
       console.error(err);
@@ -57,105 +81,8 @@ function requestDraw(delay = 0) {
     }
   }, delay);
 }
-
-function setScene(p, list, views, name) {
-  scene = {p, views, layout: layoutScene(views, list)};
-  motion.frames = {};
-  for (const v of list) { motion.setFrame(v, views[v].bb); motion.setCrown(v, views[v].crown); }
-  motion.leaves = motion.leaves.filter(l => views[l.view]);
-  const S = SPECIES[p.species];
-  motion.stiff = S.mode === "roca" ? 0.08 : S.mode === "hiedra" ? 0.45 : 1;
-  motion.leafRate = S.mode === "roca" ? 0 : S.caduca
-    ? {primavera: 4, verano: 4, otono: 14, invierno: 0}[p.estacion]
-    : (S.mode === "graminea" || S.mode === "palmera") ? 2 : 3;
-  const total = list.reduce((s, v) => s + views[v].count, 0);
-  $("meta").textContent = name + " · " + total.toLocaleString("es-ES") + " polilíneas";
-  resize();
-}
-
-/* ---------- canvas y bucle ---------- */
-const cv = $("cv"), ctx = cv.getContext("2d");
-let colors = readColors(document.documentElement), cssW = 0, cssH = 0, dpr = 1;
-
-function dockInset() {
-  const dock = document.querySelector(".dock"), stage = $("stage");
-  const r = dock.getBoundingClientRect(), s = stage.getBoundingClientRect();
-  const drawer = $("ajustes"), wide = innerWidth > 860;
-  const right = wide && drawer.classList.contains("open") ? Math.max(0, s.right - (innerWidth - 12 - drawer.offsetWidth) + 16) : 0;
-  return {bottom: Math.max(0, s.bottom - r.top), right};
-}
-
-function resize() {
-  dpr = Math.min(2, window.devicePixelRatio || 1);
-  cssW = cv.clientWidth; cssH = cv.clientHeight;
-  cv.width = Math.round(cssW * dpr); cv.height = Math.round(cssH * dpr);
-  if (scene) scene.fitted = fit(scene.layout, cssW, cssH, dockInset());
-  paint();
-}
-
-function paint() {
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, cssW, cssH);
-  if (!scene || !scene.fitted) return;
-  const inset = dockInset();
-  drawScene(ctx, scene, motion, colors, {scaleX: Math.max(24, cssW * 0.04), scaleY: cssH - inset.bottom - 22});
-}
-
-let last = 0, running = false;
-function loop(t) {
-  const dt = last ? (t - last) / 1000 : 0;
-  last = t;
-  motion.step(dt);
-  paint();
-  if (motion.active()) requestAnimationFrame(loop);
-  else { running = false; last = 0; paint(); }
-}
-function wake() { if (!running) { running = true; last = 0; requestAnimationFrame(loop); } }
-
-/* ---------- interacción con la planta ---------- */
-let press = null;
-const local = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-
-cv.addEventListener("pointerdown", e => {
-  if (!scene) return;
-  const [sx, sy] = local(e), hit = pick(scene, sx, sy);
-  if (!hit) return;
-  press = {sx, sy, hit, dragging: false, id: e.pointerId};
-  cv.setPointerCapture(e.pointerId);
-});
-cv.addEventListener("pointermove", e => {
-  if (!scene) return;
-  const [sx, sy] = local(e);
-  if (!press) { cv.style.cursor = pick(scene, sx, sy) ? "grab" : "default"; return; }
-  if (!press.dragging && Math.hypot(sx - press.sx, sy - press.sy) > 6) {
-    press.dragging = motion.grab(press.hit.v, press.hit.x, press.hit.y);
-    cv.style.cursor = "grabbing";
-    dismissHint();
-  }
-  if (press.dragging) {
-    const {sc, ox, oy} = scene.fitted, it = scene.layout.items.find(i => i.v === press.hit.v);
-    motion.pull((sx - ox) / sc - it.dx, (oy - sy) / sc - it.dy);
-    wake();
-  }
-});
-const endPress = () => {
-  if (!press) return;
-  if (press.dragging) motion.release();
-  else motion.shake(press.hit.v, press.hit.x, press.hit.y);
-  press = null; cv.style.cursor = "grab";
-  dismissHint(); wake();
-};
-cv.addEventListener("pointerup", endPress);
-cv.addEventListener("pointercancel", () => { if (press && press.dragging) motion.release(); press = null; wake(); });
-cv.addEventListener("keydown", e => {
-  if ((e.key === "Enter" || e.key === " ") && scene) {
-    e.preventDefault();
-    const it = scene.layout.items[0], b = scene.views[it.v].bb;
-    motion.shake(it.v, (b[0] + b[2]) / 2, b[1] + (b[3] - b[1]) * 0.7);
-    dismissHint(); wake();
-  }
-});
-function dismissHint() { $("hint").classList.add("gone"); }
+const wake = () => stage.wake();
+const paint = () => stage.paint();
 
 /* ---------- controles ---------- */
 const FORMAT = {
@@ -184,13 +111,30 @@ function syncInputs() {
   updateFicha();
 }
 
+// Cada celda del cajetín "teclea" al cambiar de valor.
+function cell(id, text) {
+  const el = $(id);
+  if (el.textContent === String(text)) return;
+  el.textContent = text;
+  if (reduceMotion.matches) return;
+  el.classList.remove("tick"); void el.offsetWidth; el.classList.add("tick");
+}
+
+// Las medidas del cajetín son las del dibujo (la misma altura que marca la cota).
+let drawnBox = null;
+function showMedidas() {
+  if (!drawnBox) return;
+  const grove = GROVE.has(state.species) && state.values.tallos > 1 ? `, ${state.values.tallos} ejemplares` : "";
+  cell("f_medidas", `${fmtNum(drawnBox[2] - drawnBox[0], 2)} × ${fmtNum(drawnBox[3] - drawnBox[1], 2)} m${grove}`);
+}
+
 function updateFicha() {
   const S = SPECIES[state.species], v = state.values;
-  $("f_nombre").textContent = $("tipo").selectedOptions[0].textContent.replace(/\s*\(.*\)$/, "");
-  $("f_vista").textContent = {alzado: "Alzado", planta: "Planta", iso: "Isométrica", tres: "Las tres vistas"}[state.view];
-  const what = S.mode === "roca" ? "de largo" : S.shape === "seto" ? "de largo" : S.mode === "hiedra" ? "de ancho" : "de copa";
-  const grove = GROVE.has(state.species) && v.tallos > 1 ? `, ${v.tallos} ejemplares` : "";
-  $("f_medidas").textContent = `${fmtNum(v.H)} m de alto, ${fmtNum(v.W)} m ${what}${grove}`;
+  cell("f_nombre", $("tipo").selectedOptions[0].textContent.replace(/\s*\(.*\)$/, ""));
+  cell("f_vista", {alzado: "Alzado", planta: "Planta", iso: "Isométrica", tres: "Las tres vistas"}[state.view]);
+  cell("f_lamina", state.seed);
+  cell("f_escala", "1:" + state.values.escala);
+    showMedidas();
 }
 
 function applySpecies() {
@@ -203,7 +147,7 @@ function applySpecies() {
     b.disabled = !S.caduca && b.dataset.s !== "verano";
     b.setAttribute("aria-checked", String(est === b.dataset.s));
   });
-  $("estSeg").title = S.caduca ? "" : "Especie de hoja perenne: mantiene las hojas todo el año.";
+  $("estNota").hidden = !!S.caduca;
   const sp = state.species, m = S.mode, masas = ["masas", "olivo", "cipres", "arbusto", "conifera"].includes(m);
   $("lbl_tallos").textContent = GROVE.has(sp) ? "Ejemplares (árboles)" : sp === "olivo" ? "Ramas madre" : sp === "multitallo" ? "Pies (troncos)" : "Tallos";
   const dis = {
@@ -242,7 +186,7 @@ function showSimplification(p, stats) {
     : `Perímetro exterior con todo el detalle: ${n(before)} vértices. Para Revit, simplifícalo.`;
 }
 
-$("tipo").addEventListener("change", e => { state.species = e.target.value; motion.leaves = []; applySpecies(); requestDraw(); });
+$("tipo").addEventListener("change", e => { state.species = e.target.value; motion.leaves = []; applySpecies(); requestDraw(0, true); });
 
 document.querySelectorAll("#estSeg button").forEach(b => b.addEventListener("click", () => {
   if (b.disabled) return;
@@ -255,12 +199,15 @@ document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click
   state.view = b.dataset.v;
   document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", String(x === b)));
   updateFicha();
-  requestDraw();
+  requestDraw(0, true);
 }));
 
-const setSeed = s => { state.seed = Math.max(1, Math.min(99999, Math.round(s) || 1)); $("semilla").value = state.seed; requestDraw(); };
+const setSeed = s => { state.seed = Math.max(1, Math.min(99999, Math.round(s) || 1)); $("semilla").value = state.seed; updateFicha(); requestDraw(0, true); };
 $("semilla").addEventListener("change", e => setSeed(+e.target.value));
-$("variante").addEventListener("click", () => setSeed(1 + Math.floor(Math.random() * 99998)));
+$("variante").addEventListener("click", e => {
+  const b = e.currentTarget; b.classList.remove("rolling"); void b.offsetWidth; b.classList.add("rolling");
+  setSeed(1 + Math.floor(Math.random() * 99998));
+});
 document.addEventListener("keydown", e => {
   if (e.key.toLowerCase() === "r" && !e.metaKey && !e.ctrlKey && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) $("variante").click();
   if (e.key === "Escape") { closeDrawer(); closeExport(); }
@@ -270,7 +217,7 @@ document.addEventListener("keydown", e => {
 function setWind(on) {
   motion.wind.on = on;
   $("windOn").setAttribute("aria-checked", String(on));
-  document.querySelector(".dock").classList.toggle("windy", on);
+  document.querySelector(".controls").classList.toggle("windy", on);
   if (on) wake();
 }
 $("windOn").addEventListener("click", () => setWind(!motion.wind.on));
@@ -288,12 +235,13 @@ document.querySelectorAll("#windDir button").forEach(b => b.addEventListener("cl
 /* panel de ajustes */
 function openDrawer() {
   $("ajustes").hidden = false;
+  $("workspace").classList.add("has-drawer");
   requestAnimationFrame(() => { $("ajustes").classList.add("open"); resize(); });
   $("b_ajustes").setAttribute("aria-expanded", "true"); closeExport();
 }
 function closeDrawer() {
   const d = $("ajustes"); if (d.hidden) return;
-  d.classList.remove("open"); $("b_ajustes").setAttribute("aria-expanded", "false"); resize();
+  d.classList.remove("open"); $("workspace").classList.remove("has-drawer"); $("b_ajustes").setAttribute("aria-expanded", "false"); resize();
   setTimeout(() => { if (!d.classList.contains("open")) d.hidden = true; }, reduceMotion.matches ? 0 : 220);
 }
 $("b_ajustes").addEventListener("click", () => $("ajustes").hidden ? openDrawer() : closeDrawer());
@@ -368,40 +316,45 @@ form.addEventListener("submit", async e => {
   }
 });
 
-/* ---------- color de la página: verde, lila o beige ---------- */
-const THEMES = ["verde", "lila", "beige"];
+/* ---------- tema: claro (papel vegetal) u oscuro (mesa de luz) ---------- */
 function setTheme(t, save = true) {
-  if (!THEMES.includes(t)) t = "verde";
-  if (t === "verde") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
-  document.querySelectorAll(".themes button").forEach(b => b.setAttribute("aria-checked", String(b.dataset.theme === t)));
+  if (t !== "claro" && t !== "oscuro") t = "claro";
+  document.documentElement.dataset.theme = t;
+  $("b_tema").setAttribute("aria-pressed", String(t === "oscuro"));
+  $("b_tema").setAttribute("aria-label", t === "oscuro" ? "Modo claro" : "Modo oscuro");
+  document.querySelector('meta[name="theme-color"]').content = t === "oscuro" ? "#121923" : "#f7f8f5";
   if (save) try { localStorage.setItem("plantimania-tema", t); } catch {}
-  colors = readColors(document.documentElement); paint();
-  heroScene($("heroBack"), $("heroFront"));
-  landing?.refresh();
+  stage.refreshColors(); portada.refreshColors();
 }
-document.querySelectorAll(".themes button").forEach(b => b.addEventListener("click", () => setTheme(b.dataset.theme)));
+$("b_tema").addEventListener("click", () => setTheme(document.documentElement.dataset.theme === "oscuro" ? "claro" : "oscuro"));
 
-/* ---------- página de inicio ---------- */
+/* ---------- portada: un olivo vivo sobre la hoja ---------- */
+const portada = createStage($("cvPortada"), {onTouch: () => $("cvPortada").closest(".portada-hoja").classList.add("tocado")});
+ask({type: "draw", params: buildParams("olivo", {...DEFAULT_SETTINGS, ...speciesDefaults("olivo")}, 128), views: ["alzado"]})
+  .then(res => { portada.setScene(buildParams("olivo", {...DEFAULT_SETTINGS, ...speciesDefaults("olivo")}, 128), ["alzado"], res.views); route(); })
+  .catch(console.error);
+$("cvPortada").closest(".portada-hoja").addEventListener("pointerdown", () => $("cvPortada").closest(".portada-hoja").classList.add("tocado"));
+new ResizeObserver(() => portada.resize()).observe($("cvPortada"));
+
 // #generador abre la herramienta; cualquier otra dirección muestra la portada.
-const landing = createLanding($("dotsBack"), $("dotsFront"));
 function route() {
   const inApp = location.hash === "#generador";
   $("inicio").hidden = inApp;
   document.querySelector(".app").inert = !inApp;
-  if (inApp) { landing.stop(); setTimeout(resize, 30); } else landing.start();
+  portada.motion.wind.on = !inApp && !reduceMotion.matches;
+  if (inApp) setTimeout(resize, 30); else { portada.resize(); portada.wake(); }
 }
 addEventListener("hashchange", route);
 
+document.querySelectorAll(".fecha-hoy").forEach(el => { el.textContent = new Date().toLocaleDateString("es-ES", {day: "2-digit", month: "2-digit", year: "numeric"}); });
+
 /* ---------- arranque ---------- */
 new ResizeObserver(resize).observe($("stage"));
-const paintHero = () => heroScene($("heroBack"), $("heroFront"));
-let heroTimer = 0;
-new ResizeObserver(() => { clearTimeout(heroTimer); heroTimer = setTimeout(paintHero, 200); }).observe(document.querySelector(".hero"));
-document.fonts?.ready.then(() => { colors = readColors(document.documentElement); paint(); });
+$("stage").querySelector(".cajetin").addEventListener("transitionend", () => resize());
+document.fonts?.ready.then(() => { stage.refreshColors(); portada.refreshColors(); });
 $("tipo").value = state.species;
 applySpecies();
 requestDraw();
-{ let t = "verde"; try { t = localStorage.getItem("plantimania-tema") || t; } catch {} setTheme(t, false); }
+setTheme(document.documentElement.dataset.theme, false);
 route();
-initLiquidGlass(".start, .tabs button, .glass, .sheet, .meta, .card");
 if (!reduceMotion.matches) setTimeout(() => setWind(true), 400);
