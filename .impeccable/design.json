@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-13T00:00:00Z",
+  "title": "Design System: Plantimanía",
+  "extensions": {
+    "colorMeta": {
+      "cobalt": { "role": "primary", "displayName": "Cobalto de cotas", "canonical": "#2344ee", "tonalRamp": ["#0b1a66", "#122a9e", "#1a37cc", "#2344ee", "#5f77f2", "#93a3f6", "#c4cdfa", "#e8ecfd"] },
+      "night-cobalt": { "role": "primary", "displayName": "Cobalto claro (oscuro)", "canonical": "#8fa3ff", "tonalRamp": ["#1a2670", "#2c3da8", "#4558d6", "#6a80f0", "#8fa3ff", "#b0bdff", "#d0d8ff", "#eceffe"] },
+      "desk": { "role": "neutral", "displayName": "Mesa de dibujo", "canonical": "#dfe4e1", "tonalRamp": ["#2a302d", "#4a524e", "#6e7873", "#939d98", "#b6bfba", "#dfe4e1", "#eceeea", "#f7f8f5"] },
+      "sheet": { "role": "neutral", "displayName": "Papel vegetal", "canonical": "#f7f8f5", "tonalRamp": ["#9aa09b", "#b8bdb8", "#d0d4d0", "#eceeea", "#f2f3f0", "#f7f8f5", "#fafbf9", "#fdfdfc"] },
+      "ink": { "role": "neutral", "displayName": "Tinta azul-negra", "canonical": "#131a25", "tonalRamp": ["#131a25", "#232d3d", "#384355", "#4d5a70", "#5a6579", "#7d879a", "#a8b0bf", "#d4d8e0"] },
+      "night-sheet": { "role": "neutral", "displayName": "Azul noche (hoja)", "canonical": "#121923", "tonalRamp": ["#0b0f15", "#0e141d", "#121923", "#1a2332", "#253043", "#33405a", "#4c5a76", "#6d7b97"] },
+      "night-ink": { "role": "neutral", "displayName": "Tinta clara (oscuro)", "canonical": "#e6ecf5", "tonalRamp": ["#5d6879", "#8f9cb1", "#b6c0d0", "#cdd5e1", "#e6ecf5", "#eef2f8", "#f4f7fb", "#fafbfd"] },
+      "error": { "role": "semantic", "displayName": "Error", "canonical": "#b3261e", "tonalRamp": ["#4a0f0c", "#7a1a15", "#9a211a", "#b3261e", "#cf5a53", "#e69a95", "#f3cbc8", "#fbeceb"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Marca", "purpose": "Marca de la portada, Bricolage Grotesque 800 con anchura 85 %." },
+      "headline": { "displayName": "Titular", "purpose": "Especie del cajetín y títulos de diálogo y panel." },
+      "title": { "displayName": "Título de tarjeta", "purpose": "Resumen de tarjetas del panel de ajustes." },
+      "body": { "displayName": "Cuerpo", "purpose": "Texto general, notas y introducción." },
+      "label": { "displayName": "Etiqueta", "purpose": "Etiquetas de grupos de controles." },
+      "cajetin-label": { "displayName": "Etiqueta de cajetín", "purpose": "Solo dt de las celdas del cajetín, en mayúsculas." },
+      "data": { "displayName": "Dato", "purpose": "JetBrains Mono para cifras, escalas, medidas y fecha." }
+    },
+    "shadows": [
+      { "name": "shadow-sheet", "value": "0 1px 0 rgba(255,255,255,.9) inset, 0 6px 12px -9px rgba(19,26,37,.4)", "purpose": "Asienta la hoja sobre la mesa (claro). Oscuro: 0 1px 0 rgba(255,255,255,.05) inset, 0 6px 12px -8px rgba(0,0,0,.7)." },
+      { "name": "shadow-pop", "value": "0 20px 44px -18px rgba(19,26,37,.4), 0 2px 8px rgba(19,26,37,.08)", "purpose": "Popover de exportar, panel de ajustes y diálogo (claro). Oscuro: 0 20px 44px -16px rgba(0,0,0,.75)." }
+    ],
+    "motion": [
+      { "name": "out", "value": "cubic-bezier(.2, .8, .2, 1)", "purpose": "Salida suave para paneles, fantasma, tick del cajetín y pulsaciones." },
+      { "name": "spring", "value": "cubic-bezier(.34, 1.56, .64, 1)", "purpose": "Resorte corto en interruptor, pulgar de rango y marca de casilla." },
+      { "name": "ghost-away", "value": ".95s var(--out): opacity .42 a 0, translate(-26px,14px) rotate(-.5deg)", "purpose": "La vista anterior queda translúcida y se va al cambiar de hoja." },
+      { "name": "wiggle", "value": ".6s var(--out): rotate -16deg, 12deg, -6deg", "purpose": "La í de la marca se sacude al pasar el cursor." }
+    ],
+    "breakpoints": [
+      { "name": "medium", "value": "1180px" },
+      { "name": "mobile", "value": "860px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal por pantalla: exportar, descargar, empezar.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Exportar</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 14px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--sheet); color: var(--ink); font: 600 13.5px/1 var(--font-ui); cursor: pointer; transition: background-color .15s, border-color .15s, transform .12s var(--out), filter .15s; } .ds-btn:hover { background: var(--accent-soft); border-color: var(--accent); } .ds-btn:active { transform: translateY(1px) scale(.97); } .ds-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; } .ds-btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); } .ds-btn-primary:hover { background: var(--accent); filter: brightness(1.08); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Acciones secundarias: papel con filete fuerte.",
+      "html": "<button class=\"ds-btn2\">Otra variante</button>",
+      "css": ".ds-btn2 { height: 40px; padding: 0 14px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--sheet); color: var(--ink); font: 600 13.5px/1 var(--font-ui); cursor: pointer; transition: background-color .15s, border-color .15s; } .ds-btn2:hover { background: var(--accent-soft); border-color: var(--accent); } .ds-btn2:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }"
+    },
+    {
+      "name": "View Tabs",
+      "kind": "nav",
+      "refersTo": "tab-selected",
+      "description": "Pestañas de vista: alzado, planta, isométrica y las tres.",
+      "html": "<div class=\"ds-tabs\"><button aria-selected=\"true\">Alzado</button><button aria-selected=\"false\">Planta</button><button aria-selected=\"false\">Isométrica</button></div>",
+      "css": ".ds-tabs { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--sheet-2); } .ds-tabs button { height: 34px; padding: 0 15px; border: 0; border-radius: 9px; background: transparent; color: var(--ink-2); font: 600 13.5px/1 var(--font-ui); cursor: pointer; transition: background-color .15s, color .15s; } .ds-tabs button:hover { color: var(--ink); background: var(--accent-soft); } .ds-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; } .ds-tabs button[aria-selected=\"true\"] { background: var(--ink); color: var(--sheet); }"
+    },
+    {
+      "name": "Select Field",
+      "kind": "input",
+      "refersTo": "select-field",
+      "description": "Selector de especie, 44px, borde cobalto al pasar.",
+      "html": "<select class=\"ds-select\"><option>Olivo</option><option>Encina</option></select>",
+      "css": ".ds-select { width: 240px; height: 44px; padding: 0 38px 0 12px; border: 1px solid var(--line-2); border-radius: 10px; background-color: var(--sheet); color: var(--ink); font: 500 15px/1 var(--font-ui); appearance: none; -webkit-appearance: none; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%); background-position: calc(100% - 19px) 52%, calc(100% - 14px) 52%; background-size: 5px 5px; background-repeat: no-repeat; } .ds-select:hover { border-color: var(--accent); } .ds-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "chip",
+      "refersTo": "tab-selected",
+      "description": "Opciones excluyentes (estación, viento, destino); la elegida se invierte.",
+      "html": "<div class=\"ds-seg\"><button aria-checked=\"false\">Primavera</button><button aria-checked=\"true\">Verano</button><button aria-checked=\"false\">Otoño</button></div>",
+      "css": ".ds-seg { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--line-2); border-radius: 10px; } .ds-seg button { height: 32px; padding: 0 11px; border: 0; border-radius: 7px; background: transparent; color: var(--ink-2); font: 600 12.5px/1 var(--font-ui); cursor: pointer; transition: background-color .15s, color .15s; } .ds-seg button:hover:not([aria-checked=\"true\"]) { background: var(--accent-soft); color: var(--ink); } .ds-seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; } .ds-seg button[aria-checked=\"true\"] { background: var(--ink); color: var(--sheet); }"
+    },
+    {
+      "name": "Cajetín",
+      "kind": "custom",
+      "refersTo": "cajetin-cell",
+      "description": "Cajetín de planos: celdas de papel separadas por filetes de 1 px; especie en grotesca, el resto en mono.",
+      "html": "<dl class=\"ds-cajetin\"><div class=\"ds-c ds-esp\"><dd>Olivo</dd></div><div class=\"ds-c\"><dt>Lámina nº</dt><dd class=\"ds-lam\">128</dd></div><div class=\"ds-c\"><dt>Vista</dt><dd>Alzado</dd></div><div class=\"ds-c\"><dt>Ancho × alto</dt><dd>6,0 × 5,2 m</dd></div><div class=\"ds-c\"><dt>Escala</dt><dd>1:100</dd></div></dl>",
+      "css": ".ds-cajetin { margin: 0; display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 1px; width: 420px; background: var(--line-2); border: 1px solid var(--line-2); font-variant-numeric: tabular-nums; } .ds-c { margin: 0; padding: 6px 10px 7px; background: var(--sheet); } .ds-c dt { font: 500 11px/1.3 var(--font-ui); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); } .ds-c dd { margin: 2px 0 0; font: 500 13px/1.3 var(--font-mono); color: var(--ink); } .ds-esp { grid-column: 1 / 3; } .ds-esp dd { margin: 0; font: 700 27px/1.05 var(--font-ui); font-stretch: 88%; letter-spacing: -.02em; } .ds-c dd.ds-lam { font-size: 22px; font-weight: 700; color: var(--accent); }"
+    },
+    {
+      "name": "Settings Card",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Tarjeta plegable del panel de ajustes con rango.",
+      "html": "<details class=\"ds-card\" open><summary>Dimensiones</summary><div class=\"ds-body\"><div class=\"ds-range\"><label>Altura total</label><output>6,0 m</output><input type=\"range\" min=\"0\" max=\"10\" value=\"6\"></div></div></details>",
+      "css": ".ds-card { width: 320px; border-top: 1px solid var(--line); background: var(--sheet); color: var(--ink); } .ds-card > summary { display: flex; align-items: center; justify-content: space-between; padding: 14px 2px; list-style: none; cursor: pointer; font: 650 15px/1.2 var(--font-ui); } .ds-card > summary::-webkit-details-marker { display: none; } .ds-card > summary::after { content: \"\"; width: 8px; height: 8px; border-right: 2px solid var(--ink-2); border-bottom: 2px solid var(--ink-2); transform: rotate(45deg) translateY(-2px); transition: transform .22s var(--out); } .ds-card[open] > summary::after { transform: rotate(225deg); } .ds-card > summary:hover { color: var(--accent); } .ds-body { padding: 2px 2px 18px; } .ds-range { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 10px; } .ds-range label { font: 500 13px/1.3 var(--font-ui); } .ds-range output { font: 500 12px/1 var(--font-mono); color: var(--ink-2); } .ds-range input { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "La hoja de delineación viva",
+    "overview": "Plantimanía es una lámina de dibujo que responde. La planta se dibuja sobre papel vegetal, con marco de lámina y cruces de registro, y el cajetín de planos (especie, lámina, vista, medidas, escala, autor, fecha) hace de lector de estado del producto. Un único acento cobalto se reserva para lo que en un plano son cotas: foco, acción principal y datos vivos. Todo lo demás es tinta azul-negra sobre papel frío casi blanco.\n\nEl sistema es sobrio y técnico, con un gesto de juego: la planta se sacude al tocarla y, al cambiar de vista, la hoja anterior queda como un fantasma translúcido que se desplaza. Los controles son componentes estándar, sin cristal ni sombras difusas grandes; la personalidad vive en la hoja, no en los botones.\n\nHay dos temas conmutados con data-theme en :root: claro (papel vegetal sobre mesa gris verdosa) y oscuro (mesa de luz: azul noche, tinta clara, cobalto claro). Los colores viven solo en variables de :root y :root[data-theme=\"oscuro\"]; los componentes nunca escriben colores sueltos.",
+    "keyCharacteristics": [
+      "Papel frío casi blanco con grano sutil y un brillo superior casi invisible.",
+      "Filetes de 1 px (--line y --line-2) en lugar de sombras para separar.",
+      "Un solo acento, cobalto; sin segundo matiz de marca.",
+      "Bricolage Grotesque condensada para marca y títulos; JetBrains Mono para datos del cajetín.",
+      "Esquinas rectas en la hoja (4 px), 8 a 14 px en controles y paneles.",
+      "Movimiento de pantalla con resorte corto; se anula con prefers-reduced-motion."
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "El cobalto es el único acento. Si un elemento no es acción principal, foco, dato vivo o estado activo, va en tinta.", "section": "colors" },
+      { "name": "The Tokens-Only Rule", "body": "Ningún componente escribe un color suelto: todo sale de las variables de :root o de :root[data-theme=\"oscuro\"], y cada rol existe en ambos temas.", "section": "colors" },
+      { "name": "The Dato en Mono Rule", "body": "Cifras, escalas, medidas, fecha y valores de ajuste van en JetBrains Mono con cifras tabulares; nunca en la grotesca.", "section": "typography" },
+      { "name": "The Cajetín Label Rule", "body": "Las etiquetas en mayúsculas con espaciado pertenecen a las celdas del cajetín, donde son el lenguaje de la lámina; no se usan como sobretítulo de secciones ni de titulares.", "section": "typography" },
+      { "name": "The Cajetín Anchor Rule", "body": "El cajetín vive siempre abajo a la derecha de la hoja y se aparta, no se tapa, cuando entra un panel.", "section": "layout" },
+      { "name": "The Filete First Rule", "body": "Se separa con un filete de 1 px antes que con una sombra; la sombra se reserva para lo que flota.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar cobalto solo para acción principal, foco, dato vivo y estado activo (una acción primaria por superficie).",
+      "Do resolver cada color mediante variable de :root y dar un valor equivalente en :root[data-theme=\"oscuro\"].",
+      "Do separar con filetes de 1 px (--line, --line-2) y reservar --shadow-pop para lo que flota.",
+      "Do poner cifras, escalas, medidas y fechas en JetBrains Mono con cifras tabulares.",
+      "Do mantener el cajetín abajo a la derecha de la hoja y la hoja con 4px de radio.",
+      "Do anular las animaciones con prefers-reduced-motion."
+    ],
+    "donts": [
+      "Don't usar cristal, desenfoque de fondo ni sombras difusas grandes como decoración.",
+      "Don't introducir un segundo acento ni colores sueltos en componentes.",
+      "Don't usar la etiqueta en mayúsculas con espaciado fuera del cajetín.",
+      "Don't redondear la hoja ni el cajetín más allá de lo registrado.",
+      "Don't dejar que el cajetín quede tapado por el panel de ajustes."
+    ]
+  }
+}
