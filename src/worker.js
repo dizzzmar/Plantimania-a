@@ -49,7 +49,8 @@ self.onmessage = e => {
     if (type === "draw") {
       const out = {}, transfer = [];
       for (const v of list) { const pk = pack(views[v]); transfer.push(...pk.transfer); delete pk.transfer; out[v] = pk; }
-      self.postMessage({type, id, views: out}, transfer);
+      const name = blockName(params, list.length > 1 ? "3V" : list[0]);
+      self.postMessage({type, id, views: out, name}, transfer);
     } else if (type === "export") {
       const name = blockName(params, list.length > 1 ? "3V" : list[0]);
       const text = e.data.format === "dxf" ? makeDXF(params, list, views) : makeSVG(params, list, views);

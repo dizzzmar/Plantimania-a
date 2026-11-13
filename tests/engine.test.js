@@ -35,6 +35,12 @@ describe("motor de vegetación", () => {
     expect(a).toBe(b);
   });
 
+  it("forma una arboleda con varios ejemplares", () => {
+    const uno = buildParams("platano", {tallos: 1}, 5), tres = buildParams("platano", {tallos: 3}, 5);
+    const a = drawView(gen(uno), uno, "planta").bb, b = drawView(gen(tres), tres, "planta").bb;
+    expect(b[2] - b[0]).toBeGreaterThan((a[2] - a[0]) * 1.4);
+  });
+
   it("deja caer las hojas en otoño en especies caducas", () => {
     const p = buildParams("platano", {estacion: "otono"}, 7);
     const verano = buildParams("platano", {estacion: "verano"}, 7);

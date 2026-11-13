@@ -1,5 +1,5 @@
 // Parámetros de generación: valores por defecto y montaje del objeto que espera el motor.
-import {SPECIES} from "./engine/species.js";
+import {SPECIES, GROVE} from "./engine/species.js";
 
 // Ajustes de dibujo y exportación que no dependen de la especie.
 export const DEFAULT_SETTINGS = {
@@ -16,7 +16,9 @@ export const DEFAULT_SETTINGS = {
 // Ajustes que cambian con la especie (se reinician al elegir otra).
 export function speciesDefaults(id) {
   const S = SPECIES[id];
-  return {H: S.H, W: S.W, tr: S.tr, ramas: S.ramas, tallos: S.tallos, dens: S.dens, jag: S.jag, huecos: S.huecos, cs: S.cs};
+  // En las especies de arboleda, Tallos es el número de ejemplares: se empieza con uno.
+  const tallos = GROVE.has(id) ? 1 : S.tallos;
+  return {H: S.H, W: S.W, tr: S.tr, ramas: S.ramas, tallos, dens: S.dens, jag: S.jag, huecos: S.huecos, cs: S.cs};
 }
 
 // Objeto completo de parámetros para gen() y drawView().

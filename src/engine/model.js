@@ -1,6 +1,7 @@
 // Generación del modelo 3D de cada especie (masas, ramas, hojas, rocas y raíces).
 import {mulberry,U,N} from "./random.js";
-import {SPECIES} from "./species.js";
+import {SPECIES,GROVE} from "./species.js";
+/* ---------- modelo 3D ---------- */
 const v3={add:(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],mul:(a,s)=>[a[0]*s,a[1]*s,a[2]*s],norm:a=>{const l=Math.hypot(a[0],a[1],a[2])||1;return[a[0]/l,a[1]/l,a[2]/l];},cross:(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]};
 const dirAE=(az,el)=>[Math.cos(az)*Math.cos(el),Math.sin(el),Math.sin(az)*Math.cos(el)];
 function curve3(a,b,bend){const m=[(a[0]+b[0])/2+bend[0],(a[1]+b[1])/2+bend[1],(a[2]+b[2])/2+bend[2]];const pts=[];for(let i=0;i<=14;i++){const t=i/14,u=1-t;pts.push([u*u*a[0]+2*u*t*m[0]+t*t*b[0],u*u*a[1]+2*u*t*m[1]+t*t*b[1],u*u*a[2]+2*u*t*m[2]+t*t*b[2]]);}return pts;}
@@ -14,7 +15,25 @@ function leaf3(B,dir,L,w,droop,roll,R,kind){
     Lf.push(v3.add(c,v3.mul(sv,wp)));Rt.push(v3.add(c,v3.mul(sv,-wp)));}
   return {outline:Lf.concat(Rt.slice(0,n).reverse()),rib:(kind==="blade"||kind==="petal")?null:C.slice(0,n-1),center:kind==="blade"?C:null};
 }
+function shiftModel(m,ox,oz){
+  const sp=q=>[q[0]+ox,q[1],q[2]+oz];
+  return {clumps:m.clumps.map(c=>Object.assign({},c,{x:c.x+ox,z:c.z+oz})),limbs:m.limbs.map(L=>Object.assign({},L,{pts:L.pts.map(sp)})),
+    twigs:(m.twigs||[]).map(t=>t.map(sp)),leaves:(m.leaves||[]).map(l=>({outline:l.outline.map(sp),rib:l.rib?l.rib.map(sp):null,center:l.center?l.center.map(sp):null,veins:l.veins?l.veins.map(v_=>v_.map(sp)):undefined})),H:m.H,W:m.W};
+}
 function gen(p){
+  if(GROVE.has(p.species)&&p.tallos>1){
+    const R=mulberry(p.seed*13+7),pos=[[0,0]],n=p.tallos;let tries=0;
+    while(pos.length<n&&tries<500){tries++;const b=pos[Math.floor(R()*pos.length)],a=R()*6.283,d=p.W*U(R,0.55,0.9),q=[b[0]+Math.cos(a)*d,b[1]+Math.sin(a)*d*0.8];
+      if(pos.every(o=>Math.hypot(o[0]-q[0],o[1]-q[1])>p.W*0.5))pos.push(q);}
+    const parts=pos.map(([ox,oz],i)=>{const sc=i?U(R,0.8,1.08):1;return shiftModel(genOne(Object.assign({},p,{seed:p.seed+i*101,H:p.H*sc,W:p.W*sc,tallos:1})),ox,oz);});
+    const ext=Math.max(...pos.map(q=>Math.abs(q[0])))*2;
+    const m={clumps:[],limbs:[],twigs:[],leaves:[],H:Math.max(...parts.map(q=>q.H)),W:p.W+ext};
+    for(const q of parts){m.clumps.push(...q.clumps);m.limbs.push(...q.limbs);m.twigs.push(...q.twigs);m.leaves.push(...q.leaves);}
+    m.roots=p.rt==='ninguno'?{limbs:[],lines:[],spread:0}:genRoots(m,p);return m;
+  }
+  return genOne(GROVE.has(p.species)?Object.assign({},p,{tallos:1}):p);
+}
+function genOne(p){
   const g={conifera:genConifera,hiedra:genHiedra,roca:genRoca,arbusto:genArbusto,cipres:genCipres,olivo:genOlivo,masas:genMasas,multitallo:genMultitallo,rosetas:genRosetas,palmera:genPalmera,hojagrande:genHojaGrande,graminea:genGraminea}[p.mode]||genMasas;
   const m=g(p);m.leaves=m.leaves||[];m.roots=p.rt==='ninguno'?{limbs:[],lines:[],spread:0}:genRoots(m,p);return m;
 }
@@ -356,20 +375,40 @@ function genMasas(p){
 
 /* ---------- estaciones ---------- */
 function genWinter(m,p){
-  const R=mulberry(p.seed*331+5),limbs=[],twigs=[],pts=[];
-  for(const L of m.limbs)for(const q of L.pts)pts.push({q,w:L.w0});
-  if(!pts.length)pts.push({q:[0,0,0],w:0.02});
-  const wt=Math.max(0.004,m.H*0.0025);
-  for(const c of m.clumps){
-    let best=pts[0],bd=1e9;for(const o of pts){const d=Math.hypot(o.q[0]-c.x,o.q[1]-c.y,o.q[2]-c.z);if(d<bd){bd=d;best=o;}}
-    const C=[c.x,c.y,c.z];limbs.push({pts:curve3(best.q,C,[N(R)*bd*0.1,Math.abs(N(R))*bd*0.08,N(R)*bd*0.1]),w0:Math.min(best.w*0.5,wt*2),w1:wt*0.6,trunk:false,flare:0});
-    const d0=v3.norm([C[0]-best.q[0],C[1]-best.q[1]+c.r*0.4,C[2]-best.q[2]]);
-    const sub=(P,d,l,dep)=>{const e=v3.add(P,v3.mul(d,l)),mid=v3.add(v3.add(P,v3.mul(d,l*0.5)),[N(R)*l*0.06,N(R)*l*0.04,N(R)*l*0.06]);twigs.push([P,mid,e]);
-      if(dep<3){for(let j=0;j<2;j++){const t=U(R,0.55,1),q=[P[0]+(e[0]-P[0])*t,P[1]+(e[1]-P[1])*t,P[2]+(e[2]-P[2])*t];const nd=v3.norm(v3.add(d,[N(R)*0.55,0.2+N(R)*0.15,N(R)*0.55]));sub(q,nd,l*U(R,0.5,0.68),dep+1);}}};
-    for(let j=0;j<2;j++)sub(C,v3.norm(v3.add(d0,[N(R)*0.4,0.15,N(R)*0.4])),c.r*U(R,0.55,0.8),0);
+  const R=mulberry(p.seed*331+5),H=m.H,W=m.W,limbs=[],twigs=[];
+  const trunks=m.limbs.filter(L=>L.trunk&&L.pts[0][1]<=1e-9);
+  const tops=(trunks.length?trunks:[{pts:[[0,0,0],[0,H*0.3,0]],w1:H*0.01}]).map(L=>({p:L.pts[L.pts.length-1],pts:L.pts,w:L.w1,set:[]}));
+  for(const c of m.clumps){let bi=0,bd=1e9;tops.forEach((t,i)=>{const d=Math.hypot(t.p[0]-c.x,t.p[2]-c.z)+Math.max(0,t.p[1]-c.y)*0.5;if(d<bd){bd=d;bi=i;}});tops[bi].set.push(c);}
+  const tip=Math.max(0.003,H*0.0011),thin=Math.max(0.004,H*0.0016),ex=2.4;
+  const branch=(P,Q,w0,w1)=>{const L=Math.hypot(Q[0]-P[0],Q[1]-P[1],Q[2]-P[2]);if(L<1e-4)return;const pts=curve3(P,Q,[N(R)*L*0.05,Math.abs(N(R))*L*0.05,N(R)*L*0.05]);
+    if(w0<thin)twigs.push([pts[0],pts[7],pts[14]]);else limbs.push({pts,w0,w1:Math.max(tip,w1),trunk:false,flare:0});};
+  const spray=(T,d,l,dep)=>{const e=v3.add(T,v3.mul(d,l)),mid=v3.add(v3.add(T,v3.mul(d,l*0.5)),[N(R)*l*0.05,N(R)*l*0.03,N(R)*l*0.05]);twigs.push([T,mid,e]);
+    if(dep<3)for(let j=0;j<2;j++){const t=U(R,0.45,0.9),q=[T[0]+(e[0]-T[0])*t,T[1]+(e[1]-T[1])*t,T[2]+(e[2]-T[2])*t];spray(q,v3.norm(v3.add(d,[N(R)*0.45,0.15+N(R)*0.12,N(R)*0.45])),l*U(R,0.5,0.66),dep+1);}};
+  const kmeans=(S,k)=>{const P=S.map(c=>[c.x,c.y*0.7,c.z]);let C=[P[Math.floor(R()*P.length)]];
+    while(C.length<k){let bi=0,bd=-1;P.forEach((q,i)=>{const d=Math.min(...C.map(c=>Math.hypot(q[0]-c[0],q[1]-c[1],q[2]-c[2])));if(d>bd){bd=d;bi=i;}});C.push(P[bi]);}
+    let G=[];for(let it=0;it<6;it++){G=C.map(()=>[]);P.forEach((q,i)=>{let bi=0,bd=1e9;C.forEach((c,j)=>{const d=Math.hypot(q[0]-c[0],q[1]-c[1],q[2]-c[2]);if(d<bd){bd=d;bi=j;}});G[bi].push(i);});
+      C=G.map((g,j)=>g.length?[0,1,2].map(a=>g.reduce((s_,i)=>s_+P[i][a],0)/g.length):C[j]);}
+    return G.filter(g=>g.length).map(g=>g.map(i=>S[i]));};
+  for(const t of tops){
+    const Ntot=Math.max(1,t.set.length),Wt=t.w*0.9,wn=n=>Math.max(tip,Wt*Math.pow(n/Ntot,1/ex));
+    const rec=(P,S,dep,pd)=>{
+      const n=S.length;
+      if(n===1||dep>9){for(const c of S){const T=[c.x,c.y,c.z];branch(P,T,wn(1),wn(1)*0.6);const d=v3.norm([T[0]-P[0],T[1]-P[1]+c.r*0.6,T[2]-P[2]]);for(let j=0;j<2;j++)spray(T,v3.norm(v3.add(d,[N(R)*0.35,0.1,N(R)*0.35])),c.r*U(R,0.5,0.75),0);}return;}
+      const Cn=[0,0,0];for(const c of S){Cn[0]+=c.x/n;Cn[1]+=c.y/n;Cn[2]+=c.z/n;}
+      const f=dep===0?U(R,0.3,0.42):U(R,0.38,0.55);
+      let B=[P[0]+(Cn[0]-P[0])*f,P[1]+(Cn[1]-P[1])*f,P[2]+(Cn[2]-P[2])*f];
+      branch(P,B,wn(n),wn(n)*0.92);
+      const k=dep===0&&n>6?3:2,G=kmeans(S,Math.min(k,n));
+      const nd=v3.norm([B[0]-P[0],B[1]-P[1],B[2]-P[2]]);
+      if(G.length<2){rec(B,S.slice(0,Math.ceil(n/2)),dep+1,nd);rec(B,S.slice(Math.ceil(n/2)),dep+1,nd);}else for(const g of G)rec(B,g,dep+1,nd);
+    };
+    if(!t.set.length)continue;
+    const ymin=Math.min(...t.set.map(c=>c.y)),cut=ymin*0.75;let st=t.pts[0];for(const q of t.pts)if(q[1]<=cut&&q[1]>=st[1])st=q;
+    if(st[1]<t.p[1]-1e-6){const idx=t.pts.indexOf(st),seg=t.pts.slice(idx);if(seg.length>1)twigs.push(seg);} 
+    rec(st[1]<t.p[1]-1e-6?st:t.p,t.set,0,[0,1,0]);
   }
-  const fallen=[],n=30;
-  for(let i=0;i<n;i++){const a=R()*6.283,r=m.W*0.55*Math.sqrt(R()),sz=Math.max(0.03,m.W*0.012);fallen.push(leaf3([Math.cos(a)*r,0.004,Math.sin(a)*r],dirAE(R()*6.283,0),sz,sz*0.3,0,0,R,"lanceolada"));}
+  const fallen=[],nf=30;
+  for(let i=0;i<nf;i++){const a=R()*6.283,r=m.W*0.55*Math.sqrt(R()),sz=Math.max(0.03,m.W*0.012);fallen.push(leaf3([Math.cos(a)*r,0.004,Math.sin(a)*r],dirAE(R()*6.283,0),sz,sz*0.3,0,0,R,"lanceolada"));}
   return {limbs,twigs,fallen};
 }
 function seasonModel(m,p){
@@ -378,7 +417,7 @@ function seasonModel(m,p){
   if(!m.winter)m.winter=genWinter(m,p);
   const f=p.estacion==="otono"?0.22:0;
   return Object.assign({},m,{clumps:m.clumps.filter(c=>mulberry(c.seed+99)()<f),leaves:m.leaves.filter((l,i)=>mulberry(i*7+13)()<f),
-    limbs:m.limbs.concat(m.winter.limbs),twigs:(m.twigs||[]).concat(m.winter.twigs),leafless:true,crown:m.clumps,fallen:p.estacion==="otono"?m.winter.fallen:[]});
+    limbs:m.limbs.filter(L=>L.trunk&&L.pts[0][1]<=1e-9).concat(m.winter.limbs),twigs:m.winter.twigs,leafless:true,fallen:p.estacion==="otono"?m.winter.fallen:[]});
 }
 
 /* ---------- raíces ---------- */
@@ -387,7 +426,7 @@ function genRoots(model,p){
   const D=H*p.rd*p.rp,Sp=W*p.rs*p.rp/2,rg=p.rg;
   let bases=model.limbs.filter(L=>L.pts[0][1]<=1e-9&&(L.trunk||L.rings)).map(L=>({b:L.pts[0],w:L.w0}));
   if(!bases.length)bases=[{b:[0,0,0],w:Math.max(0.01,W*0.03)}];
-  if(bases.length>4)bases=bases.slice(0,4);
+  if(bases.length>8)bases=bases.slice(0,8);
   const below=q=>[q[0],Math.min(q[1],-0.002*H),q[2]];
   const wig=(B,E,amp,n=14)=>{const pts=[];const ph=R()*6.28,ph2=R()*6.28;for(let i=0;i<=n;i++){const t=i/n;let q=[B[0]+(E[0]-B[0])*t,B[1]+(E[1]-B[1])*t,B[2]+(E[2]-B[2])*t];const s=Math.sin(Math.PI*t);q=[q[0]+Math.sin(ph+t*7)*amp*s,q[1]+Math.sin(ph2+t*5)*amp*0.5*s,q[2]+Math.cos(ph+t*6)*amp*s];pts.push(i===0?q:below(q));}return pts;};
   const fine=(pts,k,len)=>{for(let j=0;j<k;j++){const b=pts[Math.floor(U(R,0.25,1)*(pts.length-1))],e=below([b[0]+N(R)*len,b[1]-Math.abs(N(R))*len*0.8,b[2]+N(R)*len]);const m=below([(b[0]+e[0])/2+N(R)*len*0.15,(b[1]+e[1])/2,(b[2]+e[2])/2+N(R)*len*0.15]);lines.push([b,m,e]);}};
@@ -421,4 +460,5 @@ function genRoots(model,p){
   }
   return {limbs,lines,spread:Sp};
 }
+
 export {v3,dirAE,curve3,leaf3,gen,seasonModel};

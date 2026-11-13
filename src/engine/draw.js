@@ -1,6 +1,7 @@
 // Dibujo de una vista: proyección, ocultación de líneas, perímetro, relleno y sombra.
 import {mulberry,U,N} from "./random.js";
 import {v3,seasonModel} from "./model.js";
+/* ---------- proyecciones ---------- */
 const ALPHA=Math.asin(Math.tan(Math.PI/6)); // 35.264°
 const CA=Math.cos(ALPHA), SA=Math.sin(ALPHA), R2=Math.SQRT1_2;
 function proj(v,q){
@@ -394,10 +395,10 @@ function drawView(model,p,v){
   const crownP=model.crown?model.crown.map(c=>{const pr=proj(v,[c.x,c.y,c.z]),[rx,ry]=clumpRadii(v,c);return fringe(pr.s[0],pr.s[1],rx*1.18,ry*1.18,c.seed+5,0.6);}):[];
   for(const cp of crownP)for(const q of cp){bb[0]=Math.min(bb[0],q[0]);bb[1]=Math.min(bb[1],q[1]);bb[2]=Math.max(bb[2],q[0]);bb[3]=Math.max(bb[3],q[1]);}
   const maxd=Math.max(bb[2]-bb[0],bb[3]-bb[1]),res=maxd/1500;
-  const thinM=p.mode==="hiedra"||p.mode==="graminea"||p.mode==="palmera",fillH=thinM||!!model.leafless;
-  const closeR=model.leafless?Math.max(3,Math.round(0.008*maxd/res)):p.mode==="hiedra"?Math.round(0.055*p.cs*1.6/res):(p.mode==="graminea"||p.mode==="palmera")?Math.round(0.035*maxd/res):Math.max(3,Math.round(0.004*maxd/res));
+  const thinM=p.mode==="hiedra"||p.mode==="graminea"||p.mode==="palmera",fillH=thinM;
+  const closeR=model.leafless?2:p.mode==="hiedra"?Math.round(0.055*p.cs*1.6/res):(p.mode==="graminea"||p.mode==="palmera")?Math.round(0.035*maxd/res):Math.max(3,Math.round(0.004*maxd/res));
   const pad=res*(6+closeR);
-  const M=new Mask([bb[0]-pad,bb[1]-pad,bb[2]+pad,bb[3]+pad],res);M.minHole=Math.pow(maxd*0.03,2);
+  const M=new Mask([bb[0]-pad,bb[1]-pad,bb[2]+pad,bb[3]+pad],res);M.minHole=Math.pow(maxd*(model.leafless?0.012:0.03),2);
   for(const it of items){for(const L of it.lines){M.clip(L.pts,L.layer,it.ground);if(thinM&&L.layer==="VEG_CONTORNO*"&&!it.ground&&!it.root)M.stroke2(L.pts,1);}if(it.poly)M.fill(it.poly,it.root?'r':it.ground);}
   for(const cp of crownP)M.fill(cp,'p');
   M.close2(closeR,fillH);
@@ -409,4 +410,5 @@ function drawView(model,p,v){
   for(const L of shadow)for(const q of L){bb[0]=Math.min(bb[0],q[0]);bb[1]=Math.min(bb[1],q[1]);bb[2]=Math.max(bb[2],q[0]);bb[3]=Math.max(bb[3],q[1]);}
   return {lines,bb,white,shadow};
 }
+
 export {proj,drawView,layerOf,weightOf,dpLoop,bridge,earclip,pip};

@@ -1,7 +1,8 @@
-import {SPECIES} from "./engine/species.js";
+import {SPECIES, GROVE} from "./engine/species.js";
 import {DEFAULT_SETTINGS, speciesDefaults, buildParams} from "./params.js";
 import {Motion} from "./motion.js";
 import {readColors, layoutScene, fit, pick, drawScene} from "./render.js";
+import {heroScene} from "./hero.js";
 
 const $ = id => document.getElementById(id);
 const fmtNum = (v, d = 1) => Number(v).toLocaleString("es-ES", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -44,7 +45,7 @@ function requestDraw(delay = 0) {
     try {
       const res = await ask({type: "draw", params: p, views: list});
       if (id !== latest) return;
-      setScene(p, list, res.views);
+      setScene(p, list, res.views, res.name);
     } catch (err) {
       console.error(err);
     } finally {
@@ -53,7 +54,7 @@ function requestDraw(delay = 0) {
   }, delay);
 }
 
-function setScene(p, list, views) {
+function setScene(p, list, views, name) {
   scene = {p, views, layout: layoutScene(views, list)};
   motion.frames = {};
   for (const v of list) { motion.setFrame(v, views[v].bb); motion.setCrown(v, views[v].crown); }
@@ -64,7 +65,7 @@ function setScene(p, list, views) {
     ? {primavera: 4, verano: 4, otono: 14, invierno: 0}[p.estacion]
     : (S.mode === "graminea" || S.mode === "palmera") ? 2 : 3;
   const total = list.reduce((s, v) => s + views[v].count, 0);
-  $("meta").textContent = total.toLocaleString("es-ES") + " polilíneas en el dibujo";
+  $("meta").textContent = name + " · " + total.toLocaleString("es-ES") + " polilíneas";
   resize();
 }
 
@@ -76,7 +77,7 @@ function dockInset() {
   const dock = document.querySelector(".dock"), stage = $("stage");
   const r = dock.getBoundingClientRect(), s = stage.getBoundingClientRect();
   const drawer = $("ajustes"), wide = innerWidth > 860;
-  const right = wide && drawer.classList.contains("open") ? drawer.offsetWidth + 24 : 0;
+  const right = wide && drawer.classList.contains("open") ? Math.max(0, s.right - (innerWidth - 12 - drawer.offsetWidth) + 16) : 0;
   return {bottom: Math.max(0, s.bottom - r.top), right};
 }
 
@@ -177,9 +178,11 @@ function syncInputs() {
 
 function updateFicha() {
   const S = SPECIES[state.species], v = state.values;
-  $("f_nombre").textContent = $("tipo").selectedOptions[0].textContent;
+  $("f_nombre").textContent = $("tipo").selectedOptions[0].textContent.replace(/\s*\(.*\)$/, "");
+  $("f_vista").textContent = {alzado: "Alzado", planta: "Planta", iso: "Isométrica", tres: "Las tres vistas"}[state.view];
   const what = S.mode === "roca" ? "de largo" : S.shape === "seto" ? "de largo" : S.mode === "hiedra" ? "de ancho" : "de copa";
-  $("f_medidas").textContent = `${fmtNum(v.H)} m de alto, ${fmtNum(v.W)} m ${what}`;
+  const grove = GROVE.has(state.species) && v.tallos > 1 ? `, ${v.tallos} ejemplares` : "";
+  $("f_medidas").textContent = `${fmtNum(v.H)} m de alto, ${fmtNum(v.W)} m ${what}${grove}`;
 }
 
 function applySpecies() {
@@ -193,9 +196,10 @@ function applySpecies() {
     b.setAttribute("aria-checked", String(est === b.dataset.s));
   });
   $("estSeg").title = S.caduca ? "" : "Especie de hoja perenne: mantiene las hojas todo el año.";
-  const m = S.mode, masas = ["masas", "olivo", "cipres", "arbusto", "conifera"].includes(m);
+  const sp = state.species, m = S.mode, masas = ["masas", "olivo", "cipres", "arbusto", "conifera"].includes(m);
+  $("lbl_tallos").textContent = GROVE.has(sp) ? "Ejemplares (árboles)" : sp === "olivo" ? "Ramas madre" : sp === "multitallo" ? "Pies (troncos)" : "Tallos";
   const dis = {
-    tronco: !(S.tr > 0), ramas: !(masas && S.tr > 0) && m !== "rosetas", tallos: !(masas || m === "multitallo" || m === "hiedra"),
+    tronco: !(S.tr > 0), ramas: !(masas && S.tr > 0) && m !== "rosetas", tallos: !(masas || m === "multitallo" || m === "hiedra" || GROVE.has(sp)),
     dentado: !(masas || m === "multitallo" || m === "roca"), huecos: !(masas || m === "multitallo"),
     cs: m === "roca", real: !(masas || m === "multitallo"),
   };
@@ -224,9 +228,10 @@ document.querySelectorAll("#estSeg button").forEach(b => b.addEventListener("cli
   requestDraw();
 }));
 
-document.querySelectorAll(".views button").forEach(b => b.addEventListener("click", () => {
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
   state.view = b.dataset.v;
-  document.querySelectorAll(".views button").forEach(x => x.setAttribute("aria-selected", String(x === b)));
+  document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", String(x === b)));
+  updateFicha();
   requestDraw();
 }));
 
@@ -300,7 +305,10 @@ $("b_svg").addEventListener("click", () => download("svg"));
 
 /* ---------- arranque ---------- */
 new ResizeObserver(resize).observe($("stage"));
-matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => { colors = readColors(document.documentElement); paint(); });
+const paintHero = () => heroScene($("heroBack"), $("heroFront"));
+let heroTimer = 0;
+new ResizeObserver(() => { clearTimeout(heroTimer); heroTimer = setTimeout(paintHero, 200); }).observe(document.querySelector(".hero"));
+document.fonts?.ready.then(() => { colors = readColors(document.documentElement); paint(); });
 $("tipo").value = state.species;
 applySpecies();
 requestDraw();
