@@ -274,6 +274,36 @@ input[type=number] { width: 84px; font-family: var(--font-ui); font-size: 14px; 
 .status { margin: 0; font: 500 12px/1.4 var(--font-ui); color: var(--stamp); }
 .status:empty { display: none; }
 
+/* ---------- buzón de sugerencias ---------- */
+.suggest {
+  width: min(540px, calc(100% - 24px)); padding: 0 22px 22px;
+  border: 0; border-radius: 8px; color: var(--ink);
+  background: var(--paper); background-image: var(--grain), var(--fibre);
+  box-shadow: var(--emboss), 0 24px 60px -20px rgba(70, 55, 25, .5);
+}
+.suggest::backdrop { background: rgba(36, 67, 44, .22); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.suggest form { display: flex; flex-direction: column; gap: 14px; }
+.suggest-head {
+  position: relative; display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 20px 0 14px; border-bottom: 1px solid var(--ink);
+}
+.suggest-head::after { content: ""; position: absolute; left: 0; right: 0; bottom: -4px; border-bottom: 1px solid var(--ink); }
+.suggest h2 { margin: 0; font: 500 30px/.95 var(--font-display); letter-spacing: -.02em; color: var(--ink); text-shadow: var(--emboss); }
+.suggest h2 em { font-style: italic; font-weight: 400; color: var(--ink-2); }
+.suggest .quote { margin-top: 4px; }
+.suggest .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.suggest .opt { font-weight: 400; color: var(--muted); }
+.suggest textarea, .suggest input:not([type=checkbox]) {
+  width: 100%; padding: 10px 12px; border: 0; border-radius: 3px;
+  background: var(--paper-hi); color: var(--ink); box-shadow: var(--deboss);
+  font: 400 14px/1.45 var(--font-ui);
+}
+.suggest input:not([type=checkbox]) { height: 40px; }
+.suggest textarea { resize: vertical; min-height: 110px; }
+.suggest .stamp { align-self: flex-start; }
+.suggest .status.error { color: #a1452b; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
 /* ---------- panel de ajustes: tarjetas hundidas ---------- */
 /* La zona de ajustes usa siempre el verde: el acento de sello pasa a verde dentro del panel. */
 .drawer {
@@ -406,6 +436,8 @@ input[type=range]:focus-visible { outline: 1.5px dashed var(--stamp); outline-of
   .group:nth-child(4) { order: 4; grid-column: 1 / -1; }
   #tipo { width: 100%; }
   .drawer { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 80dvh; transform: translateY(calc(100% + 16px)); }
+  .suggest .pair { grid-template-columns: 1fr; }
+  .suggest h2 { font-size: 26px; }
   .popover { position: fixed; left: 8px; right: 8px; top: 150px; width: auto; }
 }
 

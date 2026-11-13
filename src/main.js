@@ -3,6 +3,7 @@ import {DEFAULT_SETTINGS, speciesDefaults, buildParams} from "./params.js";
 import {Motion} from "./motion.js";
 import {readColors, layoutScene, fit, pick, drawScene} from "./render.js";
 import {heroScene} from "./hero.js";
+import {SUGGESTIONS} from "./config.js";
 
 const $ = id => document.getElementById(id);
 const fmtNum = (v, d = 1) => Number(v).toLocaleString("es-ES", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -323,6 +324,47 @@ async function download(format) {
 }
 $("b_dxf").addEventListener("click", () => download("dxf"));
 $("b_svg").addEventListener("click", () => download("svg"));
+
+/* ---------- buzón de sugerencias ---------- */
+const dlg = $("sugerencias"), form = $("f_sug"), sugStatus = $("sugStatus");
+const setSugStatus = (text, error = false) => { sugStatus.textContent = text; sugStatus.classList.toggle("error", error); };
+$("b_sugerencias").addEventListener("click", () => { closeExport(); closeDrawer(); setSugStatus(""); dlg.showModal(); $("sug_msg").focus(); });
+$("b_sug_cerrar").addEventListener("click", () => dlg.close());
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });  // clic en el fondo
+
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(form));
+  if (!data.message.trim()) { setSugStatus("Escribe tu sugerencia antes de enviarla.", true); $("sug_msg").focus(); return; }
+  if (data.email && !form.elements.email.checkValidity()) { setSugStatus("Revisa el correo: parece que le falta algo.", true); form.elements.email.focus(); return; }
+  if (!SUGGESTIONS.accessKey) { setSugStatus("El buzón todavía no está conectado a un correo, así que el mensaje no se ha enviado.", true); return; }
+  const btn = $("b_sug_enviar");
+  btn.disabled = true; btn.textContent = "Enviando…"; setSugStatus("");
+  try {
+    const res = await fetch(SUGGESTIONS.endpoint, {
+      method: "POST",
+      headers: {"Content-Type": "application/json", Accept: "application/json"},
+      body: JSON.stringify({
+        access_key: SUGGESTIONS.accessKey,
+        subject: "Nueva sugerencia en Plantimanía",
+        from_name: "Plantimanía",
+        name: data.name || "Anónimo",
+        email: data.email || undefined,
+        message: data.message,
+        contexto: `${$("tipo").selectedOptions[0].textContent}, vista ${state.view}, variante ${state.seed}`,
+        botcheck: data.botcheck ? true : undefined,
+      }),
+    });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok || out.success === false) throw new Error(out.message || res.status);
+    form.reset();
+    setSugStatus("Enviada. Gracias por escribir.");
+  } catch (err) {
+    setSugStatus("No se ha podido enviar. Inténtalo de nuevo en un momento.", true);
+  } finally {
+    btn.disabled = false; btn.textContent = "Enviar sugerencia";
+  }
+});
 
 /* ---------- arranque ---------- */
 new ResizeObserver(resize).observe($("stage"));
